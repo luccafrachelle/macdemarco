@@ -24,6 +24,11 @@ import {
   isDateOnly,
   daysBetween,
   weekdayIndex,
+  spokenFullDate,
+  dateRange,
+  percentSplit,
+  fmtNum,
+  titleTakeaway,
 } from '../src/lib/stats';
 import type { Song } from '../src/lib/types';
 
@@ -190,5 +195,30 @@ describe('dates', () => {
     expect(coveredCalendarDays(SONGS)).toBe(4);
     expect(leapDaySongs(SONGS)).toBe(0);
     expect(leapDaySongs([...SONGS, s('20200229 2', '2020-02-29')])).toBe(1);
+  });
+});
+
+describe('formatting helpers', () => {
+  test('spokenFullDate', () => {
+    expect(spokenFullDate('2026-03-23')).toBe('23 de marzo de 2026');
+    expect(spokenFullDate('2020-02-01')).toBe('1 de febrero de 2020');
+  });
+  test('dateRange collapses what it can', () => {
+    expect(dateRange('2026-03-23', '2026-03-29')).toBe('del 23 al 29 de marzo de 2026');
+    expect(dateRange('2026-01-30', '2026-02-02')).toBe('del 30 de enero al 2 de febrero de 2026');
+    expect(dateRange('2023-01-14', '2025-10-07')).toBe('del 14 de enero de 2023 al 7 de octubre de 2025');
+  });
+  test('percentSplit always adds to 100', () => {
+    expect(percentSplit(181, 65)).toEqual([74, 26]);
+    expect(percentSplit(1, 1)).toEqual([50, 50]);
+    expect(percentSplit(0, 0)).toEqual([0, 0]);
+  });
+  test('fmtNum uses a decimal comma', () => {
+    expect(fmtNum(4.5)).toBe('4,5');
+    expect(fmtNum(14.2475)).toBe('14,2');
+    expect(fmtNum(16)).toBe('16');
+  });
+  test('titleTakeaway', () => {
+    expect(titleTakeaway(181, 65)).toBe('El 74% se llama solo con la fecha. El resto le suma algo.');
   });
 });

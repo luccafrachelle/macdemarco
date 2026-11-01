@@ -273,3 +273,45 @@ export function coveredCalendarDays(songs: Song[]): number {
 export function leapDaySongs(songs: Song[]): number {
   return songs.filter((s) => s.date.endsWith('-02-29')).length;
 }
+
+/* ---------- formatting ---------- */
+
+const NUM = new Intl.NumberFormat('es-UY', { maximumFractionDigits: 1 });
+
+/** 4.5 → "4,5" (one decimal at most). */
+export function fmtNum(n: number): string {
+  return NUM.format(n);
+}
+
+function parts(iso: string): { y: number; m: number; d: number } {
+  const [y, m, d] = iso.split('-').map(Number);
+  return { y, m, d };
+}
+
+/** "2026-03-23" → "23 de marzo de 2026" */
+export function spokenFullDate(iso: string): string {
+  const { y, m, d } = parts(iso);
+  return `${d} de ${MONTHS[m - 1]} de ${y}`;
+}
+
+/** Spoken range, sharing the month and/or year when both ends have it. */
+export function dateRange(from: string, to: string): string {
+  const a = parts(from);
+  const b = parts(to);
+  if (a.y !== b.y) return `del ${spokenFullDate(from)} al ${spokenFullDate(to)}`;
+  if (a.m !== b.m) return `del ${a.d} de ${MONTHS[a.m - 1]} al ${spokenFullDate(to)}`;
+  return `del ${a.d} al ${spokenFullDate(to)}`;
+}
+
+/** Two rounded percentages that always add up to 100 (or both 0). */
+export function percentSplit(a: number, b: number): [number, number] {
+  const total = a + b;
+  if (total === 0) return [0, 0];
+  const pa = Math.round((a / total) * 100);
+  return [pa, 100 - pa];
+}
+
+export function titleTakeaway(dateOnly: number, withSuffix: number): string {
+  const [pa] = percentSplit(dateOnly, withSuffix);
+  return `El ${pa}% se llama solo con la fecha. El resto le suma algo.`;
+}
