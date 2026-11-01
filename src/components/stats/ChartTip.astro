@@ -1,0 +1,170 @@
+---
+/*
+ * One shared tooltip for every `.mark` on the page (data-tip-head / data-tip).
+ * Hover, tap or keyboard focus shows it; it is clamped to the viewport.
+ * Containers with `data-roving` (the waffle) get one tab stop + arrow keys.
+ */
+---
+
+<div class="ch-tip" id="ch-tip" role="tooltip" hidden>
+  <p class="ch-tip__head"></p>
+  <p class="ch-tip__body"></p>
+</div>
+
+<script>
+  const EDGE = 8;
+  const GAP = 10;
+  const tip = document.getElementById('ch-tip');
+
+  if (tip) {
+    const head = tip.querySelector<HTMLElement>('.ch-tip__head')!;
+    const body = tip.querySelector<HTMLElement>('.ch-tip__body')!;
+    let current: SVGElement | null = null;
+
+    const markFrom = (node: EventTarget | null): SVGElement | null =>
+      node instanceof Element ? node.closest<SVGElement>('.mark[data-tip]') : null;
+
+    function place(mark: SVGElement): void {
+      // Union of the visible shapes (a stacked bar has several).
+      const shapes = [...mark.querySelectorAll('.mark__shape')].map((el) => el.getBoundingClientRect());
+      const boxes = shapes.length ? shapes : [mark.getBoundingClientRect()];
+      const r = {
+        left: Math.min(...boxes.map((b) => b.left)),
+        right: Math.max(...boxes.map((b) => b.right)),
+        top: Math.min(...boxes.map((b) => b.top)),
+        bottom: Math.max(...boxes.map((b) => b.bottom)),
+        width: 0,
+      };
+      r.width = r.right - r.left;
+      const vw = document.documentElement.clientWidth;
+      const vh = window.innerHeight;
+      const { width, height } = tip!.getBoundingClientRect();
+      let left = r.left + r.width / 2 - width / 2;
+      left = Math.max(EDGE, Math.min(left, vw - width - EDGE));
+      let top = r.top - height - GAP;
+      if (top < EDGE) top = Math.min(r.bottom + GAP, vh - height - EDGE);
+      tip!.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+    }
+
+    function show(mark: SVGElement): void {
+      if (current !== mark) {
+        current?.classList.remove('is-active');
+        current?.removeAttribute('aria-describedby');
+        current = mark;
+        head.textContent = mark.dataset.tipHead ?? '';
+        body.textContent = mark.dataset.tip ?? '';
+        body.hidden = body.textContent === '';
+      }
+      mark.classList.add('is-active');
+      mark.setAttribute('aria-describedby', 'ch-tip');
+      tip!.hidden = false;
+      place(mark);
+    }
+
+    function hide(): void {
+      current?.classList.remove('is-active');
+      current?.removeAttribute('aria-describedby');
+      current = null;
+      tip!.hidden = true;
+    }
+
+    document.addEventListener('pointerover', (e) => {
+      const mark = markFrom(e.target);
+      if (mark) show(mark);
+    });
+    document.addEventListener('pointerout', (e) => {
+      const mark = markFrom(e.target);
+      if (!mark || mark.contains(e.relatedTarget as Node | null)) return;
+      if (e.pointerType !== 'mouse') return; // touch: keep it until the next tap
+      if (document.activeElement === mark) show(mark);
+      else hide();
+    });
+    document.addEventListener('pointerdown', (e) => {
+      const mark = markFrom(e.target);
+      if (mark) show(mark);
+      else hide();
+    });
+    document.addEventListener('focusin', (e) => {
+      const mark = markFrom(e.target);
+      if (mark) show(mark);
+    });
+    document.addEventListener('focusout', (e) => {
+      if (markFrom(e.target) && !markFrom(e.relatedTarget)) hide();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hide();
+    });
+
+    let raf = 0;
+    const follow = (): void => {
+      if (!current || raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (current) place(current);
+      });
+    };
+    window.addEventListener('scroll', follow, { passive: true, capture: true });
+    window.addEventListener('resize', follow);
+
+    /* ---------- roving focus (waffle) ---------- */
+
+    for (const group of document.querySelectorAll<SVGElement>('[data-roving]')) {
+      const marks = [...group.querySelectorAll<SVGElement>('.mark')];
+      const cols = Number(group.dataset.cols) || 1;
+      group.addEventListener('keydown', (e) => {
+        const i = marks.indexOf(markFrom(e.target) as SVGElement);
+        if (i < 0) return;
+        const step: Record<string, number> = {
+          ArrowRight: 1,
+          ArrowLeft: -1,
+          ArrowDown: cols,
+          ArrowUp: -cols,
+          Home: -i,
+          End: marks.length - 1 - i,
+        };
+        if (!(e.key in step)) return;
+        e.preventDefault();
+        const next = marks[Math.max(0, Math.min(marks.length - 1, i + step[e.key]))];
+        marks[i].setAttribute('tabindex', '-1');
+        next.setAttribute('tabindex', '0');
+        next.focus();
+      });
+    }
+  }
+</script>
+
+<style>
+  .ch-tip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    max-width: min(260px, calc(100vw - 16px));
+    padding: 9px 12px 10px;
+    font-family: var(--round);
+    font-weight: 600;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--ink);
+    background: var(--blue);
+    border: 1px solid var(--blue-bright);
+    border-radius: 6px;
+    pointer-events: none;
+    overflow-wrap: anywhere;
+  }
+
+  .ch-tip[hidden] {
+    display: none;
+  }
+
+  .ch-tip__head {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .ch-tip__body {
+    margin-top: 2px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+</style>

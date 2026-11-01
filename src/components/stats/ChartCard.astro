@@ -1,0 +1,72 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  takeaway: string;
+}
+
+const { id, title, takeaway } = Astro.props;
+---
+
+<section class="chart" aria-labelledby={`${id}-title`}>
+  <div class="chart__intro">
+    <h2 id={`${id}-title`} class="chart__title">{title}</h2>
+    <p class="chart__takeaway">{takeaway}</p>
+  </div>
+
+  <div class="chart__panel">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .chart {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .chart__intro {
+    display: grid;
+    gap: 8px;
+    max-width: 52ch;
+  }
+
+  .chart__title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(1.875rem, 4.4vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+  }
+
+  .chart__takeaway {
+    font-family: var(--round);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .chart__panel {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+    padding: 20px 12px 16px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  @media (min-width: 720px) {
+    .chart__panel {
+      padding: 28px 28px 22px;
+    }
+  }
+
+  .chart__panel > :global(svg) {
+    max-width: 500px;
+    margin-inline: auto;
+  }
+</style>

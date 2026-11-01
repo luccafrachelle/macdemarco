@@ -1,0 +1,42 @@
+---
+import db from '../data/songs.json';
+import { countCoveredDays } from '../lib/format';
+import type { DB } from '../lib/types';
+
+const covered = countCoveredDays(db as DB);
+---
+
+<footer class="container site-footer">
+  <p class="site-footer__data">
+    <span>{covered} de 366 días tienen canción</span>
+    <span class="site-footer__sep" aria-hidden="true">·</span>
+    <span>datos de MusicBrainz y ListenBrainz</span>
+  </p>
+  <p class="site-footer__note">Esto es una sidequest, claramente no es oficial. Un saludo.</p>
+</footer>
+
+<style>
+  .site-footer {
+    display: grid;
+    gap: 6px;
+    padding-bottom: 40px;
+  }
+
+  .site-footer__data {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .site-footer p {
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+  }
+
+  .site-footer__sep {
+    opacity: 0.5;
+  }
+</style>

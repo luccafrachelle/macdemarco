@@ -1,0 +1,215 @@
+/* Build-time SVG charts on the stats page. */
+:root {
+  --c-single: var(--yellow); /* charts 1–2 */
+  --c-a: #9c9334; /* first category: mustard */
+  --c-b: #6a65e8; /* second category: blue */
+}
+
+.ch-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.ch-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.ch-base {
+  stroke: var(--ink-soft);
+  stroke-opacity: 0.4;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.ch-axis {
+  fill: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.ch-val {
+  fill: var(--ink-soft);
+  font-family: var(--round);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.ch-val--max {
+  fill: var(--ink);
+  font-weight: 700;
+}
+
+.ch-val--none {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.ch-fill {
+  fill: var(--c-single);
+}
+
+.ch-fill--a {
+  fill: var(--c-a);
+}
+
+.ch-fill--b {
+  fill: var(--c-b);
+}
+
+/* Highlight the max: everything else at 55%. */
+.is-dim {
+  opacity: 0.55;
+}
+
+/* ---------- marks ---------- */
+
+.mark {
+  outline: none;
+  cursor: default;
+}
+
+.mark__hit {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.mark__shape {
+  transition: stroke-opacity 120ms var(--ease);
+  stroke: var(--ink);
+  stroke-opacity: 0;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.mark:hover .mark__shape,
+.mark.is-active .mark__shape,
+.mark:focus-visible .mark__shape {
+  stroke-opacity: 1;
+}
+
+.mark:focus-visible .mark__hit {
+  stroke: var(--yellow);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---------- legend ---------- */
+
+.ch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--round);
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.ch-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ch-swatch {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--c-single);
+}
+
+.ch-swatch--a {
+  background: var(--c-a);
+}
+
+.ch-swatch--b {
+  background: var(--c-b);
+}
+
+/* ---------- data tables ---------- */
+
+.ch-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ch-table caption {
+  padding-bottom: 8px;
+  font-family: var(--round);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  text-align: left;
+  caption-side: bottom;
+  padding-top: 10px;
+}
+
+.ch-table th,
+.ch-table td {
+  padding: 5px 10px 5px 0;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.ch-table th:first-child,
+.ch-table td:first-child {
+  text-align: left;
+}
+
+.ch-table th {
+  font-family: var(--round);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* ---------- note + "ver datos" ---------- */
+
+.ch-note {
+  max-width: 60ch;
+  font-family: var(--round);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.ch-data {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.ch-data summary {
+  display: inline-block;
+  font-family: var(--round);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+}
+
+.ch-data summary:hover,
+.ch-data[open] summary {
+  color: var(--ink);
+}
+
+.ch-data[open] summary {
+  margin-bottom: 12px;
+}
