@@ -29,7 +29,8 @@ def _get(url: str, contact: str, params: dict | None = None) -> dict:
             last = requests.HTTPError(f"{resp.status_code} for {url}")
         except (requests.ConnectionError, requests.Timeout) as exc:
             last = exc
-        time.sleep(2**attempt)
+        if attempt < RETRIES - 1:
+            time.sleep(2**attempt)
     raise last
 
 
