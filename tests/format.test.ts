@@ -75,17 +75,17 @@ describe('resultSentence', () => {
 
   test('nearest after, one song', () => {
     const r: Result = { kind: 'nearest', md: '03-14', after: match('03-17', 3) };
-    expect(resultSentence(r)).toBe('Para el 14 de marzo no hay, pero el 17 de marzo sí.');
+    expect(resultSentence(r)).toBe('El 14 de marzo no hay, pero el 17 de marzo sí.');
   });
 
   test('nearest before, one song, other month', () => {
     const r: Result = { kind: 'nearest', md: '03-01', before: match('02-29', 1) };
-    expect(resultSentence(r)).toBe('Para el 1 de marzo no hay, pero el 29 de febrero sí.');
+    expect(resultSentence(r)).toBe('El 1 de marzo no hay, pero el 29 de febrero sí.');
   });
 
   test('nearest one side with several songs', () => {
     const r: Result = { kind: 'nearest', md: '03-14', after: match('03-17', 3, 2) };
-    expect(resultSentence(r)).toBe('Para el 14 de marzo no hay, pero el 17 de marzo hay 2.');
+    expect(resultSentence(r)).toBe('El 14 de marzo no hay, pero el 17 de marzo hay 2.');
   });
 
   test('tie, same month', () => {
@@ -95,7 +95,7 @@ describe('resultSentence', () => {
       before: match('08-02', 3, 2),
       after: match('08-08', 3),
     };
-    expect(resultSentence(r)).toBe('Para el 5 de agosto no hay. Las más cerca: el 2 y el 8 de agosto.');
+    expect(resultSentence(r)).toBe('El 5 de agosto no hay. Las más cerca: el 2 y el 8 de agosto.');
   });
 
   test('tie across months', () => {
@@ -106,13 +106,13 @@ describe('resultSentence', () => {
       after: match('08-03', 2),
     };
     expect(resultSentence(r)).toBe(
-      'Para el 1 de agosto no hay. Las más cerca: el 30 de julio y el 3 de agosto.',
+      'El 1 de agosto no hay. Las más cerca: el 30 de julio y el 3 de agosto.',
     );
   });
 
   test('nearest with no songs at all', () => {
     const r: Result = { kind: 'nearest', md: '01-01' };
-    expect(resultSentence(r)).toBe('Para el 1 de enero no hay.');
+    expect(resultSentence(r)).toBe('El 1 de enero no hay.');
   });
 });
 

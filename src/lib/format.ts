@@ -53,13 +53,13 @@ export function resultSentence(result: Result): string {
 
   const { before, after } = result;
   if (before && after) {
-    return `Para el ${when} no hay. Las más cerca: ${datePair(before.md, after.md)}.`;
+    return `El ${when} no hay. Las más cerca: ${datePair(before.md, after.md)}.`;
   }
   const match = before ?? after;
-  if (!match) return `Para el ${when} no hay.`;
+  if (!match) return `El ${when} no hay.`;
   const other = spokenDate(match.md);
   const n = match.songs.length;
-  return n > 1 ? `Para el ${when} no hay, pero el ${other} hay ${n}.` : `Para el ${when} no hay, pero el ${other} sí.`;
+  return n > 1 ? `El ${when} no hay, pero el ${other} hay ${n}.` : `El ${when} no hay, pero el ${other} sí.`;
 }
 
 export function countCoveredDays(db: DB): number {
