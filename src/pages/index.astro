@@ -1,16 +1,110 @@
 ---
+import Base from '../layouts/Base.astro';
+import DateInput from '../components/DateInput.astro';
+import ResultCard from '../components/ResultCard.astro';
+import db from '../data/songs.json';
+import { countCoveredDays } from '../lib/format';
+import type { DB } from '../lib/types';
+
+const data = db as DB;
+const covered = countCoveredDays(data);
+// Escape "<" so a title can never close the <script> element.
+const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base>
+  <main class="container page">
+    <header class="hero">
+      <p class="eyebrow hero__eyebrow">
+        <span class="hero__dot" aria-hidden="true"></span>
+        Lado A · One Wayne G
+      </p>
+      <h1 class="display">¿Mac te escribió una canción para <em>tu&nbsp;cumple</em>?</h1>
+      <p class="lede hero__lede">
+        Los títulos de <i>One Wayne G</i> son fechas. Fijate si hay una con la tuya.
+      </p>
+    </header>
+
+    <section class="search" aria-label="Buscar por fecha de cumpleaños">
+      <DateInput />
+    </section>
+
+    <section class="result-section" aria-label="Resultado">
+      <ResultCard />
+    </section>
+
+    <!-- Task 7: CalendarGrid.astro mounts here (listens to mdm:result, dispatches mdm:search). -->
+    <section id="calendar-slot" class="calendar-slot"></section>
+  </main>
+
+  <footer class="container site-footer">
+    <p>{covered} de 366 días tienen canción · proyecto fan no oficial</p>
+  </footer>
+
+  <script type="application/json" id="db" set:html={dbJson} />
+  <script>
+    import '../scripts/app.ts';
+  </script>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: 40px;
+    padding-top: clamp(40px, 9vw, 96px);
+    padding-bottom: 56px;
+  }
+
+  @media (min-width: 720px) {
+    .page {
+      gap: 56px;
+    }
+  }
+
+  .hero {
+    display: grid;
+    gap: 20px;
+    max-width: min(100%, 760px);
+  }
+
+  .hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200, 85, 61, 0.18);
+  }
+
+  .hero__lede {
+    max-width: 46ch;
+  }
+
+  .hero__lede i {
+    font-style: normal;
+    color: var(--ink);
+  }
+
+  .calendar-slot:empty,
+  .result-section:has(> .result:empty) {
+    display: none;
+  }
+
+  .site-footer {
+    padding-top: 20px;
+    padding-bottom: 40px;
+  }
+
+  .site-footer p {
+    padding-top: 20px;
+    border-top: 1px dashed var(--hairline);
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+</style>
