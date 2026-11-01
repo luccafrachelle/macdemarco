@@ -58,12 +58,12 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   .select::after {
     content: '';
     position: absolute;
-    right: 16px;
+    right: 18px;
     top: 50%;
-    width: 7px;
-    height: 7px;
-    border-right: 1.5px solid var(--ink);
-    border-bottom: 1.5px solid var(--ink);
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid var(--ink-soft);
+    border-bottom: 1.5px solid var(--ink-soft);
     transform: translateY(-70%) rotate(45deg);
     pointer-events: none;
   }
@@ -75,28 +75,27 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
     height: 56px;
     padding: 0 40px 0 16px;
     font-family: var(--mono);
-    font-size: 1.125rem;
+    font-size: 1.0625rem;
     font-weight: 600;
     color: var(--ink);
-    background: var(--paper);
-    border: 1.5px solid var(--ink);
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
     border-radius: 8px;
     cursor: pointer;
     transition:
-      background-color 160ms var(--ease),
+      border-color 160ms var(--ease),
       box-shadow 160ms var(--ease);
   }
 
   select:hover {
-    background: var(--paper-deep);
+    border-color: #3d352b;
   }
 
   select:focus-visible {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    box-shadow:
-      0 0 0 2px var(--paper),
-      0 0 0 4px var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
   }
 
   .search-btn {
@@ -107,9 +106,9 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: 0.02em;
-    color: var(--paper);
+    color: var(--bg);
     background: var(--ink);
-    border: 1.5px solid var(--ink);
+    border: 0;
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 3px 0 0 var(--accent);
@@ -131,8 +130,13 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
     transition: transform 160ms var(--ease);
   }
 
-  .search-btn:hover span {
-    transform: translateX(3px);
+  @media (hover: hover) {
+    .search-btn:hover {
+      background: #fff6e6;
+    }
+    .search-btn:hover span {
+      transform: translateX(3px);
+    }
   }
 
   .search-btn:active {
@@ -145,7 +149,7 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
     outline-offset: 2px;
     box-shadow:
       0 3px 0 0 var(--accent),
-      0 0 0 3px var(--paper),
+      0 0 0 3px var(--bg),
       0 0 0 5px var(--accent);
   }
 </style>

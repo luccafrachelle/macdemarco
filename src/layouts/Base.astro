@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title = 'Mac en tu cumple',
-  description = '¿Mac DeMarco te escribió una canción para tu cumple? Los títulos de One Wayne G son fechas: buscá la tuya.',
+  description = 'Mac DeMarco tituló un montón de demos con la fecha en que las grabó. Fijate si hay una de tu cumple.',
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
@@ -22,7 +22,7 @@ const canonical = Astro.site ? new URL(base, Astro.site).href : undefined;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f3ecdf" />
+    <meta name="theme-color" content="#0f0d0b" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_UY" />
