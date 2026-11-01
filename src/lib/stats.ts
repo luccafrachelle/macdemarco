@@ -121,7 +121,7 @@ export function monthTakeaway(boxes: MonthBox[]): string {
   const totals = boxes.map((b) => b.total);
   const hi = argMax(totals);
   const lo = argMin(totals);
-  return `${cap(MONTHS[hi])} es el mes más cargado: ${totals[hi]} canciones. ${cap(MONTHS[lo])} casi no tiene: ${totals[lo]}.`;
+  return `${cap(MONTHS[hi])} es el mes con más canciones: ${totals[hi]} canciones. ${cap(MONTHS[lo])} casi no tiene: ${totals[lo]}.`;
 }
 
 /* ---------- chart 2: weekday ---------- */
@@ -142,7 +142,7 @@ export function weekdayCounts(songs: Song[]): number[] {
 
 export function weekdayTakeaway(counts: number[]): string {
   const i = argMax(counts);
-  return `Los ${WEEKDAYS_PLURAL[i]} son su día: ${counts[i]} canciones.`;
+  return `Los ${WEEKDAYS_PLURAL[i]} son día fav para hacer música: ${counts[i]} canciones.`;
 }
 
 /* ---------- chart 3: year by year ---------- */
@@ -313,5 +313,5 @@ export function percentSplit(a: number, b: number): [number, number] {
 
 export function titleTakeaway(dateOnly: number, withSuffix: number): string {
   const [pa] = percentSplit(dateOnly, withSuffix);
-  return `El ${pa}% se llama solo con la fecha. El resto le suma algo.`;
+  return `El ${pa}% es solo la fecha. El resto tiene un nombre aparte.`;
 }

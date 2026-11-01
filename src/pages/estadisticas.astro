@@ -24,7 +24,6 @@ import {
   longestTitle,
   monthBoxes,
   monthTakeaway,
-  recordingYears,
   repeatedDays,
   spokenFullDate,
   titleKinds,
@@ -40,7 +39,6 @@ import '../styles/charts.css';
 
 const songs = (db as DB).songs;
 
-const years = recordingYears(songs);
 const boxes = monthBoxes(songs);
 const weekdays = weekdayCounts(songs);
 const perYear = yearBars(songs);
@@ -79,7 +77,7 @@ const tiles = [
   {
     label: 'La pausa más larga',
     value: plural(gap.days, 'día', 'días'),
-    note: `sin fechar nada, ${dateRange(gap.from, gap.to)}.`,
+    note: `sin sacar nada, ${dateRange(gap.from, gap.to)}.`,
   },
   {
     label: 'Cada cuánto',
@@ -87,7 +85,7 @@ const tiles = [
     note: 'es la espera promedio entre una fecha con canción y la siguiente.',
   },
   {
-    label: 'El mes más intenso',
+    label: 'El mes con más temas',
     value: plural(topMonth.count, 'canción', 'canciones'),
     note: `en ${monthName(topMonth.month)} de ${topMonth.year}.`,
   },
@@ -104,18 +102,13 @@ const tiles = [
   },
 ];
 
-const from = years[0];
-const to = years[years.length - 1];
 ---
 
 <Base title="Estadísticas · ¿Hay alguna canción de Mac DeMarco en tu cumple?">
   <TabNav current="estadisticas" />
   <main class="container page">
     <header class="hero">
-      <h1 class="display">Las canciones en números</h1>
-      <p class="lede hero__lede">
-        Mac grabó y fechó estas canciones entre {from} y {to}. Algunas cosas que salen de mirarlas juntas.
-      </p>
+      <h1 class="display">Algunos datos</h1>
     </header>
 
     <ChartCard id="mes" title="¿En qué mes graba más?" takeaway={monthTakeaway(boxes)}>
