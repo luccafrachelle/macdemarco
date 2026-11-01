@@ -1,0 +1,587 @@
+---
+/*
+ * GitHub-style calendar: 12 months × 31 days, green by number of songs.
+ * All cells render at build time; the <script> below only adds the shared
+ * tooltip, click → `mdm:search`, and the `.is-target` highlight on `mdm:result`.
+ */
+import db from '../data/songs.json';
+import { cellLabel, levelFor, monthAbbr } from '../lib/calendar';
+import { countCoveredDays, monthName } from '../lib/format';
+import { daysInMonth, toMd } from '../lib/nearest';
+import type { DB } from '../lib/types';
+
+const data = db as DB;
+const covered = countCoveredDays(data);
+
+const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
+const AXIS_MARKS = new Set([1, 5, 10, 15, 20, 25, 31]);
+
+const months = Array.from({ length: 12 }, (_, i) => {
+  const month = i + 1;
+  return {
+    month,
+    name: monthName(month),
+    abbr: monthAbbr(month),
+    cells: DAYS.map((day) => {
+      if (day > daysInMonth(month)) return { void: true as const, day };
+      const md = toMd(month, day);
+      const count = data.days[md]?.length ?? 0;
+      return { void: false as const, day, md, level: levelFor(count), label: cellLabel(md, count) };
+    }),
+  };
+});
+---
+
+<section id="calendar" class="cal" aria-labelledby="cal-title">
+  <div class="cal__intro">
+    <p class="eyebrow">Lado B · el año entero</p>
+    <h2 id="cal-title" class="cal__title">El año, <em>día por día</em>.</h2>
+    <p class="lede cal__lede">
+      Cada cuadrado es un día. Los verdes tienen canción, y cuanto más oscuro el verde, más canciones caen
+      ese día. Tocá cualquiera para buscarlo.
+    </p>
+    <p class="cal__stat">
+      <span class="cal__stat-num">{covered}</span>
+      <span class="cal__stat-text">de 366 días<br />tienen canción</span>
+    </p>
+  </div>
+
+  <div class="cal__panel">
+    <div class="cal__scroll">
+      <div class="cal__grid" id="cal-grid">
+        <div class="cal__axis" aria-hidden="true">
+          <span class="cal__label"></span>
+          {DAYS.map((d) => <span class="cal__tick">{AXIS_MARKS.has(d) ? d : ''}</span>)}
+        </div>
+        {
+          months.map((m) => (
+            <div class="cal__month" role="group" aria-label={m.name}>
+              <span class="cal__label" aria-hidden="true">
+                {m.abbr}
+              </span>
+              {m.cells.map((c) =>
+                c.void ? (
+                  <span class="cell cell--void" aria-hidden="true" />
+                ) : (
+                  <button type="button" class="cell" data-md={c.md} data-level={c.level} aria-label={c.label} />
+                ),
+              )}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="cal__legend" aria-hidden="true">
+      <span>menos</span>
+      <span class="cal__swatches">
+        {[0, 1, 2, 3, 4].map((level) => <span class="cell cell--swatch" data-level={level} />)}
+      </span>
+      <span>más</span>
+    </div>
+  </div>
+
+  <div class="cal-tip" id="cal-tip" role="tooltip" hidden>
+    <p class="cal-tip__head"><span class="cal-tip__date"></span><span class="cal-tip__count"></span></p>
+    <ul class="cal-tip__list"></ul>
+    <p class="cal-tip__hint"></p>
+  </div>
+</section>
+
+<script>
+  import { countLabel } from '../lib/calendar';
+  import { spokenDate } from '../lib/format';
+  import { parseHash, toMd } from '../lib/nearest';
+  import type { DB } from '../lib/types';
+
+  const MAX_TITLES = 4;
+  const EDGE = 8; // min distance from the viewport edge
+  const GAP = 10; // distance between cell and tooltip
+
+  const grid = document.getElementById('cal-grid');
+  const tip = document.getElementById('cal-tip');
+  const dbNode = document.getElementById('db');
+
+  if (grid && tip && dbNode) {
+    const db = JSON.parse(dbNode.textContent ?? '{}') as DB;
+    const scroller = grid.parentElement as HTMLElement;
+    const tipDate = tip.querySelector<HTMLElement>('.cal-tip__date')!;
+    const tipCount = tip.querySelector<HTMLElement>('.cal-tip__count')!;
+    const tipList = tip.querySelector<HTMLUListElement>('.cal-tip__list')!;
+    const tipHint = tip.querySelector<HTMLElement>('.cal-tip__hint')!;
+
+    const cellFrom = (node: EventTarget | null): HTMLButtonElement | null =>
+      node instanceof Element ? node.closest<HTMLButtonElement>('button.cell[data-md]') : null;
+
+    /* ---------- tooltip ---------- */
+
+    let tipFor: HTMLButtonElement | null = null;
+
+    function fillTip(md: string): void {
+      const titles = (db.days?.[md] ?? []).map((i) => db.songs[i]?.title).filter(Boolean) as string[];
+      tipDate.textContent = spokenDate(md);
+      tipCount.textContent = countLabel(titles.length);
+      tipList.replaceChildren(
+        ...titles.slice(0, MAX_TITLES).map((title) => {
+          const li = document.createElement('li');
+          li.textContent = title;
+          return li;
+        }),
+      );
+      tipList.hidden = titles.length === 0;
+      const extra = titles.length - MAX_TITLES;
+      tipHint.textContent =
+        titles.length === 0 ? 'tocá para ver la más cercana' : extra > 0 ? `y ${extra} más · tocá para verlas` : '';
+      tipHint.hidden = tipHint.textContent === '';
+    }
+
+    function placeTip(cell: HTMLElement): void {
+      const r = cell.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const vh = window.innerHeight;
+      const { width, height } = tip!.getBoundingClientRect();
+      let left = r.left + r.width / 2 - width / 2;
+      left = Math.max(EDGE, Math.min(left, vw - width - EDGE));
+      let top = r.top - height - GAP;
+      if (top < EDGE) top = Math.min(r.bottom + GAP, vh - height - EDGE);
+      tip!.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+    }
+
+    function showTip(cell: HTMLButtonElement): void {
+      if (tipFor !== cell) {
+        tipFor?.removeAttribute('aria-describedby');
+        tipFor = cell;
+        fillTip(cell.dataset.md!);
+      }
+      cell.setAttribute('aria-describedby', 'cal-tip');
+      tip!.hidden = false;
+      placeTip(cell);
+    }
+
+    function hideTip(): void {
+      tipFor?.removeAttribute('aria-describedby');
+      tipFor = null;
+      tip!.hidden = true;
+    }
+
+    grid.addEventListener('pointerover', (e) => {
+      const cell = cellFrom(e.target);
+      if (cell) showTip(cell);
+    });
+    grid.addEventListener('pointerout', (e) => {
+      const cell = cellFrom(e.target);
+      if (!cell || cell.contains(e.relatedTarget as Node | null)) return;
+      if (document.activeElement === cell && cell.matches(':focus-visible')) showTip(cell);
+      else hideTip();
+    });
+    grid.addEventListener('focusin', (e) => {
+      const cell = cellFrom(e.target);
+      if (cell) showTip(cell);
+    });
+    grid.addEventListener('focusout', () => hideTip());
+    // Keep the tooltip glued to its cell while the page or grid scrolls
+    // (focusing a cell with Tab can itself scroll it into view).
+    let raf = 0;
+    const follow = (): void => {
+      if (!tipFor || raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (tipFor) placeTip(tipFor);
+      });
+    };
+    window.addEventListener('scroll', follow, { passive: true, capture: true });
+    window.addEventListener('resize', follow);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideTip();
+    });
+
+    /* ---------- search + target ---------- */
+
+    grid.addEventListener('click', (e) => {
+      const cell = cellFrom(e.target);
+      if (!cell) return;
+      hideTip();
+      const [month, day] = cell.dataset.md!.split('-').map(Number);
+      window.dispatchEvent(new CustomEvent('mdm:search', { detail: { month, day } }));
+    });
+
+    let target: HTMLElement | null = null;
+
+    function setTarget(md: string): void {
+      const next = grid!.querySelector<HTMLElement>(`button.cell[data-md="${md}"]`);
+      if (!next || next === target) return;
+      target?.classList.remove('is-target');
+      next.classList.add('is-target');
+      target = next;
+      // On mobile the grid scrolls sideways: bring the target into view there
+      // without touching the page's vertical scroll.
+      if (scroller.scrollWidth > scroller.clientWidth) {
+        const s = scroller.getBoundingClientRect();
+        const c = next.getBoundingClientRect();
+        const pad = 48;
+        if (c.left < s.left + pad || c.right > s.right - pad) {
+          scroller.scrollLeft += c.left - s.left - s.width / 2 + c.width / 2;
+        }
+      }
+    }
+
+    window.addEventListener('mdm:result', (e) => setTarget(e.detail.md));
+
+    // app.ts may have run its initial (hash) search before this listener
+    // existed; read the same state directly so the target is never missed.
+    const initial = parseHash(location.hash);
+    if (initial) setTarget(toMd(initial.month, initial.day));
+  }
+</script>
+
+<style>
+  .cal {
+    --cell: 12px;
+    --cell-gap: 3px;
+    --label: 26px;
+    display: grid;
+    gap: 28px;
+    scroll-margin-top: 24px;
+  }
+
+  @media (min-width: 720px) {
+    .cal {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 56px;
+      align-items: start;
+    }
+  }
+
+  /* ---------- intro column ---------- */
+
+  .cal__intro {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    max-width: 42ch;
+  }
+
+  @media (min-width: 720px) {
+    .cal__intro {
+      position: sticky;
+      top: 32px;
+      padding-top: 8px;
+    }
+  }
+
+  .cal__title {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2rem, 4.6vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .cal__title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .cal__stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--hairline);
+  }
+
+  .cal__stat-num {
+    font-family: var(--serif);
+    font-size: 3.25rem;
+    line-height: 1;
+    color: var(--green-4);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cal__stat-text {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- panel (cassette-label frame) ---------- */
+
+  .cal__panel {
+    min-width: 0;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 0 var(--hairline);
+    overflow: hidden;
+  }
+
+  .cal__scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hairline) transparent;
+    /* room for the target outline + pulse so it is never clipped */
+    padding: 20px 22px 16px;
+  }
+
+  /* Desktop: months are columns, days run down. */
+  .cal__grid {
+    display: flex;
+    gap: var(--cell-gap);
+    width: max-content;
+    font-size: 0.625rem;
+    line-height: 1;
+    color: var(--ink-soft);
+  }
+
+  .cal__month,
+  .cal__axis {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cell-gap);
+  }
+
+  .cal__label {
+    height: 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    white-space: nowrap;
+  }
+
+  .cal__axis {
+    width: 18px;
+    margin-right: 4px;
+  }
+
+  .cal__tick {
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+
+  /* Three-letter months don't fit a 12px column: set them sideways. */
+  .cal__label {
+    height: 30px;
+  }
+
+  .cal__month .cal__label {
+    width: var(--cell);
+    align-items: center;
+    justify-content: flex-start;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* ---------- cells ---------- */
+
+  .cell {
+    display: block;
+    flex: none;
+    width: var(--cell);
+    height: var(--cell);
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 2px;
+    background: var(--cell-empty);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      transform 140ms var(--ease),
+      filter 140ms var(--ease);
+  }
+
+  .cell[data-level='1'] {
+    background: var(--green-1);
+  }
+  .cell[data-level='2'] {
+    background: var(--green-2);
+  }
+  .cell[data-level='3'] {
+    background: var(--green-3);
+  }
+  .cell[data-level='4'] {
+    background: var(--green-4);
+  }
+
+  .cell--void {
+    visibility: hidden;
+  }
+
+  button.cell:hover {
+    transform: scale(1.2);
+    filter: brightness(1.08);
+  }
+
+  button.cell:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  button.cell.is-target {
+    position: relative;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    animation: cell-pulse 2.4s var(--ease) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button.cell.is-target {
+      animation: none;
+    }
+    button.cell:hover {
+      transform: none;
+    }
+  }
+
+  /* ---------- legend ---------- */
+
+  .cal__legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 22px 14px;
+    border-top: 1px dashed var(--hairline);
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .cal__swatches {
+    display: inline-flex;
+    gap: var(--cell-gap);
+  }
+
+  .cell--swatch {
+    cursor: default;
+  }
+
+  /* ---------- mobile: months are rows, days run across ---------- */
+
+  @media (max-width: 639.98px) {
+    .cal {
+      --cell: 9px;
+      --label: 30px;
+    }
+
+    .cal__grid {
+      flex-direction: column;
+    }
+
+    .cal__month,
+    .cal__axis {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .cal__axis {
+      width: auto;
+      height: 14px;
+      margin: 0 0 2px;
+    }
+
+    .cal__tick {
+      width: var(--cell);
+      height: auto;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .cal__label,
+    .cal__month .cal__label {
+      width: var(--label);
+      height: auto;
+      writing-mode: horizontal-tb;
+      transform: none;
+      /* month names stay put while the days scroll underneath */
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      align-self: stretch;
+      background: var(--paper);
+      box-shadow:
+        -16px 0 0 var(--paper),
+        4px 0 4px var(--paper);
+      flex: none;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .cal__scroll {
+      padding: 16px 16px 12px;
+    }
+
+    .cal__legend {
+      justify-content: flex-start;
+      padding-inline: 16px;
+    }
+  }
+
+  /* ---------- tooltip ---------- */
+
+  .cal-tip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    max-width: min(280px, calc(100vw - 16px));
+    padding: 10px 12px 11px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--paper);
+    background: var(--ink);
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.08),
+      0 8px 24px -8px rgba(43, 33, 24, 0.45);
+    pointer-events: none;
+  }
+
+  .cal-tip[hidden] {
+    display: none;
+  }
+
+  .cal-tip__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .cal-tip__count {
+    font-weight: 400;
+    color: var(--green-1);
+    white-space: nowrap;
+  }
+
+  .cal-tip__list {
+    margin: 6px 0 0;
+    padding: 6px 0 0;
+    list-style: none;
+    border-top: 1px dashed rgba(243, 236, 223, 0.25);
+    overflow-wrap: anywhere;
+  }
+
+  .cal-tip__list :global(li)::before {
+    content: '♪ ';
+    color: var(--accent);
+  }
+
+  .cal-tip__hint {
+    margin-top: 4px;
+    color: rgba(243, 236, 223, 0.66);
+  }
+</style>

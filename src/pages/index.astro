@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import DateInput from '../components/DateInput.astro';
 import ResultCard from '../components/ResultCard.astro';
+import CalendarGrid from '../components/CalendarGrid.astro';
 import db from '../data/songs.json';
 import { countCoveredDays } from '../lib/format';
 import type { DB } from '../lib/types';
@@ -33,8 +34,7 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
       <ResultCard />
     </section>
 
-    <!-- Task 7: CalendarGrid.astro mounts here (listens to mdm:result, dispatches mdm:search). -->
-    <section id="calendar-slot" class="calendar-slot"></section>
+    <CalendarGrid />
   </main>
 
   <footer class="container site-footer">
@@ -90,7 +90,6 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
     color: var(--ink);
   }
 
-  .calendar-slot:empty,
   .result-section:has(> .result:empty) {
     display: none;
   }

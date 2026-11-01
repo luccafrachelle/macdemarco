@@ -154,6 +154,17 @@ a {
   }
 }
 
+/* Soft accent ring that breathes out from the searched calendar day. */
+@keyframes cell-pulse {
+  0% {
+    box-shadow: 0 0 0 3px rgba(200, 85, 61, 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px rgba(200, 85, 61, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
