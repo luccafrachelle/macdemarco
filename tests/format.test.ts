@@ -144,3 +144,12 @@ describe('countCoveredDays', () => {
     expect(countCoveredDays(db)).toBe(2);
   });
 });
+
+describe('formatFullDate placeholder year', () => {
+  test('sentinel year 2000 shows DD.MM only', () => {
+    expect(formatFullDate('2000-08-05')).toBe('05.08');
+  });
+  test('real year unchanged', () => {
+    expect(formatFullDate('2019-08-05')).toBe('05.08.2019');
+  });
+});

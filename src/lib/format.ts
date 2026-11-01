@@ -19,10 +19,11 @@ export function monthName(month: number): string {
   return MONTHS[month - 1];
 }
 
-/** "2019-08-05" → "05.08.2019" */
+/** "2019-08-05" → "05.08.2019"; placeholder year 2000 → "05.08" */
 export function formatFullDate(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return m ? `${m[3]}.${m[2]}.${m[1]}` : iso;
+  if (!m) return iso;
+  return m[1] === '2000' ? `${m[3]}.${m[2]}` : `${m[3]}.${m[2]}.${m[1]}`;
 }
 
 export function formatDays(n: number): string {

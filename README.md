@@ -13,6 +13,8 @@ MB_CONTACT=tu@email.com .venv/bin/python -m scripts.build_db --refresh
 
 Nota: unos ~99 temas usan un link de búsqueda de Spotify en vez de link directo, porque el embed público trunca "One Wayne G" a 100 temas.
 
+`src/data/songs.json` y `data/raw/` están commiteados y el CI no ejecuta el pipeline de Python (requiere Python 3.11+).
+
 ## Tests
 
 ```bash
