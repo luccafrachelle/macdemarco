@@ -8,11 +8,12 @@ interface Props {
 
 const {
   title = 'Mac en tu cumple',
-  description = 'Mac DeMarco tituló un montón de demos con la fecha en que las grabó. Fijate si hay una de tu cumple.',
+  description = '¿Hay alguna canción de Mac DeMarco en tu cumple? Poné la fecha y fijate.',
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const canonical = Astro.site ? new URL(base, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}one-wayne-g.jpg`, Astro.site).href : `${base}one-wayne-g.jpg`;
 ---
 
 <!doctype html>
@@ -22,22 +23,29 @@ const canonical = Astro.site ? new URL(base, Astro.site).href : undefined;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0f0d0b" />
+    <meta name="theme-color" content="#07060f" />
+    <meta name="color-scheme" content="dark" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_UY" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:image:alt" content="Portada de One Wayne G: un dibujo amarillo de una cara sobre azul" />
     <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content={ogImage} />
 
-    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <link rel="icon" type="image/png" sizes="64x64" href={`${base}favicon.png`} />
+    <link rel="apple-touch-icon" sizes="180x180" href={`${base}apple-touch-icon.png`} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=JetBrains+Mono:wght@400;600&display=swap"
     />
   </head>
   <body>

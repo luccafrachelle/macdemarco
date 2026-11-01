@@ -10,19 +10,13 @@
 
 <template id="card-template">
   <article class="card">
-    <header class="card__top">
-      <span class="side-mark" aria-hidden="true">A</span>
-      <span class="card__date"></span>
-      <span class="card__reels" aria-hidden="true"></span>
-    </header>
-    <div class="card__stripe" aria-hidden="true"></div>
-    <div class="card__label">
-      <h2 class="card__title"></h2>
-    </div>
-    <footer class="card__foot">
-      <span class="card__album"></span>
-      <a class="card__link" target="_blank" rel="noopener">Escuchar en Spotify<span class="card__link-arrow" aria-hidden="true">↗</span><span class="card__link-title visually-hidden"></span></a>
-    </footer>
+    <p class="card__date"></p>
+    <h2 class="card__title"></h2>
+    <p class="card__album"></p>
+    <div class="card__player"></div>
+    <a class="card__link" target="_blank" rel="noopener"
+      >Abrir en Spotify <span aria-hidden="true">↗</span><span class="card__link-title visually-hidden"></span></a
+    >
   </article>
 </template>
 
@@ -39,23 +33,24 @@
 
   .result__sentence {
     font-family: var(--serif);
-    font-size: clamp(1.625rem, 3.6vw, 2.25rem);
-    line-height: 1.15;
-    letter-spacing: -0.005em;
-    max-width: 30ch;
+    font-weight: 500;
+    font-size: clamp(1.75rem, 3.8vw, 2.5rem);
+    line-height: 1.12;
+    letter-spacing: 0.01em;
+    max-width: 28ch;
     text-wrap: pretty;
     animation: rise 420ms var(--ease) both;
   }
 
   .result__group {
     display: grid;
-    gap: 12px;
+    gap: 14px;
   }
 
   .result__label {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
   }
 
   .result__label::after {
@@ -67,149 +62,105 @@
 
   .result__cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
     gap: 16px;
   }
 
-  /* ---------- cassette label ---------- */
+  /* ---------- card: a small square of the cover ---------- */
 
   .card {
-    --rule: 2.25rem;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: var(--bg-raised);
-    border: 1px solid var(--line);
+    padding: 20px 18px 16px;
+    background: var(--blue);
     border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow:
-      inset 0 1px 0 var(--line-soft),
-      0 12px 32px -18px rgba(0, 0, 0, 0.8);
     animation: rise 460ms var(--ease) both;
     animation-delay: calc(var(--i, 0) * 70ms + 80ms);
   }
 
-  .card__top {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px 10px;
+  .card__date {
     font-family: var(--mono);
     font-size: 0.75rem;
     letter-spacing: 0.08em;
-    color: var(--ink-soft);
-  }
-
-  .card__date {
     font-variant-numeric: tabular-nums;
-  }
-
-  /* tiny tape window with two reels */
-  .card__reels {
-    margin-left: auto;
-    width: 44px;
-    height: 16px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background:
-      radial-gradient(circle at 11px 50%, var(--ink-soft) 0 1.5px, transparent 2px 4px, var(--line) 4.5px 5.5px, transparent 6px),
-      radial-gradient(circle at calc(100% - 11px) 50%, var(--ink-soft) 0 1.5px, transparent 2px 4px, var(--line) 4.5px 5.5px, transparent 6px);
-  }
-
-  /* thin two-tone band */
-  .card__stripe {
-    height: 6px;
-    margin-inline: 16px;
-    background: linear-gradient(
-      to bottom,
-      var(--accent) 0 2px,
-      transparent 2px 4px,
-      var(--line) 4px 5px,
-      transparent 5px
-    );
-  }
-
-  /* ruled writing area */
-  .card__label {
-    flex: 1;
-    padding: 6px 16px calc(var(--rule) * 0.5);
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--rule) - 1px),
-      var(--line-soft) calc(var(--rule) - 1px),
-      var(--line-soft) var(--rule)
-    );
-    background-origin: content-box;
-    background-clip: content-box;
-    min-height: calc(var(--rule) * 2 + 6px + var(--rule) * 0.5);
+    color: var(--yellow);
   }
 
   .card__title {
+    margin-top: 10px;
     font-family: var(--serif);
-    font-weight: 400;
-    font-size: 1.75rem;
-    line-height: var(--rule);
-    letter-spacing: -0.005em;
+    font-weight: 500;
+    font-size: 1.875rem;
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+    color: var(--ink);
     overflow-wrap: anywhere;
-  }
-
-  .card__foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px 12px;
-    padding: 12px 16px 14px;
-    border-top: 1px solid var(--line);
+    text-wrap: balance;
   }
 
   .card__album {
+    margin-top: 6px;
     font-family: var(--mono);
     font-size: 0.75rem;
     color: var(--ink-soft);
-    min-width: 0;
+  }
+
+  .card__player {
+    margin-top: auto;
+    padding-top: 18px;
+  }
+
+  .card__player:empty {
+    display: none;
+  }
+
+  .card__frame {
+    display: block;
+    height: 80px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--bg);
+  }
+
+  .card__frame iframe {
+    display: block;
+    width: 100%;
+    height: 80px;
+    border: 0;
   }
 
   .card__link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
+    align-self: flex-start;
+    margin-top: 12px;
     font-family: var(--mono);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
-    color: var(--ink);
-    border: 1px solid rgba(239, 230, 212, 0.28);
-    border-radius: 999px;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    text-decoration-color: rgba(236, 230, 200, 0.28);
+    text-underline-offset: 3px;
     transition:
-      background-color 160ms var(--ease),
-      border-color 160ms var(--ease),
-      color 160ms var(--ease);
+      color 160ms var(--ease),
+      text-decoration-color 160ms var(--ease);
+  }
+
+  /* no player (unusual link): the text link becomes the main action */
+  .card__player:empty + .card__link {
+    margin-top: auto;
+    padding-top: 18px;
+    font-size: 0.8125rem;
+    color: var(--ink);
   }
 
   .card__link:focus-visible {
-    outline-offset: 2px;
-  }
-
-  .card__link-arrow {
-    color: var(--accent);
-    transition:
-      transform 160ms var(--ease),
-      color 160ms var(--ease);
+    outline-offset: 3px;
+    border-radius: 2px;
   }
 
   @media (hover: hover) {
     .card__link:hover {
-      color: var(--bg);
-      background: var(--ink);
-      border-color: var(--ink);
-    }
-    .card__link:hover .card__link-arrow {
-      color: inherit;
-      transform: translate(2px, -2px);
+      color: var(--yellow);
+      text-decoration-color: currentColor;
     }
   }
 </style>

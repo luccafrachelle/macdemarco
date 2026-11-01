@@ -1,77 +1,66 @@
 ---
 /*
- * GitHub contribution graph over the reference leap year 2024: columns are
- * weeks (Monday first), rows are weekdays, green by number of songs.
- * All cells render at build time; the <script> below only adds the shared
- * tooltip, click → `mdm:search`, and the `.is-target` highlight on `mdm:result`.
+ * The year as 12 month strips over the reference leap year: rows are months,
+ * columns are days 1–31 (transposed with CSS on narrow screens, same DOM).
+ * Cells go from blue to mustard by number of songs. Everything renders at
+ * build time; the <script> below only adds the shared tooltip, click →
+ * `mdm:search`, and the `.is-target` highlight on `mdm:result`.
  */
 import db from '../data/songs.json';
-import { cellLabel, levelFor, monthAbbr, monthLabelColumns, weekGrid } from '../lib/calendar';
-import { countCoveredDays } from '../lib/format';
+import { cellLabel, levelFor, monthAbbr, monthStrips } from '../lib/calendar';
 import type { DB } from '../lib/types';
 
 const data = db as DB;
-const covered = countCoveredDays(data);
 
-const weeks = weekGrid(2024).map((col) =>
-  col.map((cell) => {
-    if (!cell) return null;
+type Item =
+  | { kind: 'month'; abbr: string }
+  | { kind: 'day'; md: string; level: number; label: string }
+  | { kind: 'void' };
+
+// Flat, month-major: [label, day 1 … day 31] × 12.
+const rows: Item[] = monthStrips().flatMap(({ month, days }): Item[] => [
+  { kind: 'month', abbr: monthAbbr(month) },
+  ...days.map((cell): Item => {
+    if (!cell) return { kind: 'void' };
     const count = data.days[cell.md]?.length ?? 0;
-    return { md: cell.md, level: levelFor(count), label: cellLabel(cell.md, count) };
+    return { kind: 'day', md: cell.md, level: levelFor(count), label: cellLabel(cell.md, count) };
   }),
-);
-const months = monthLabelColumns(2024).map(({ month, col }) => ({ col, abbr: monthAbbr(month) }));
-const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
+]);
+const AXIS = new Set([1, 5, 10, 15, 20, 25, 31]);
+const axis = Array.from({ length: 31 }, (_, i) => (AXIS.has(i + 1) ? String(i + 1) : ''));
 ---
 
 <section id="calendar" class="cal" aria-labelledby="cal-title">
-  <div class="cal__head">
-    <div class="cal__intro">
-      <h2 id="cal-title" class="cal__title">Todo el año</h2>
-      <p class="lede cal__lede">
-        Cada cuadradito es un día. Verde si hay canción, más verde si hay varias. Tocá uno para verlo.
-      </p>
-    </div>
-    <p class="cal__stat">
-      <span class="cal__stat-num">{covered}</span>
-      <span class="cal__stat-text">de 366 días tienen canción</span>
-    </p>
+  <div class="cal__intro">
+    <h2 id="cal-title" class="cal__title">Todo el año</h2>
+    <p class="lede">Tocá un cuadradito para ver las canciones que hay ese día.</p>
   </div>
 
   <div class="cal__panel">
-    <span class="cal__screw cal__screw--tl" aria-hidden="true"></span>
-    <span class="cal__screw cal__screw--tr" aria-hidden="true"></span>
-    <span class="cal__screw cal__screw--bl" aria-hidden="true"></span>
-    <span class="cal__screw cal__screw--br" aria-hidden="true"></span>
+    <!--
+      13 groups of 32 items: the day axis first, then one per month (label + 31 slots).
+      Desktop flows them as rows; mobile flows the same items as columns.
+    -->
+    <div class="strips" id="cal-grid">
+      <span class="strips__corner" aria-hidden="true"></span>
+      {axis.map((n) => <span class="strips__axis" aria-hidden="true">{n}</span>)}
+      {
+        rows.map((item) =>
+          item.kind === 'month' ? (
+            <span class="strips__month" aria-hidden="true">{item.abbr}</span>
+          ) : item.kind === 'day' ? (
+            <button type="button" class="cell" data-md={item.md} data-level={item.level} aria-label={item.label} />
+          ) : (
+            <span class="cell cell--void" aria-hidden="true" />
+          ),
+        )
+      }
+    </div>
 
-    <div class="cal__scroll" id="cal-scroll">
-      <div class="gh" style={`--weeks: ${weeks.length}`}>
-        <div class="gh__months" aria-hidden="true">
-          {months.map((m) => <span style={`grid-column: ${m.col + 1} / span 4`}>{m.abbr}</span>)}
-        </div>
-        <div class="gh__weekdays" aria-hidden="true">
-          {WEEKDAYS.map((d) => <span>{d}</span>)}
-        </div>
-        <div class="gh__grid" id="cal-grid">
-          {
-            weeks.flat().map((c) =>
-              c ? (
-                <button type="button" class="cell" data-md={c.md} data-level={c.level} aria-label={c.label} />
-              ) : (
-                <span class="cell cell--void" aria-hidden="true" />
-              ),
-            )
-          }
-        </div>
-        <div class="gh__foot">
-          <span class="side-mark" aria-hidden="true">B</span>
-          <div class="gh__legend" aria-hidden="true">
-            <span>menos</span>
-            {[0, 1, 2, 3, 4].map((level) => <span class="cell cell--swatch" data-level={level} />)}
-            <span>más</span>
-          </div>
-        </div>
-      </div>
+    <div class="cal__legend" aria-hidden="true">
+      <span>menos</span>
+      {[0, 1, 2, 3, 4].map((level) => <span class="cell cell--swatch" data-level={level} />)}
+      <span>más</span>
     </div>
   </div>
 
@@ -98,7 +87,6 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
 
   if (grid && tip && dbNode) {
     const db = JSON.parse(dbNode.textContent ?? '{}') as DB;
-    const scroller = document.getElementById('cal-scroll') ?? grid;
     const tipDate = tip.querySelector<HTMLElement>('.cal-tip__date')!;
     const tipCount = tip.querySelector<HTMLElement>('.cal-tip__count')!;
     const tipList = tip.querySelector<HTMLUListElement>('.cal-tip__list')!;
@@ -207,16 +195,6 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
       target?.classList.remove('is-target');
       next.classList.add('is-target');
       target = next;
-      // On mobile the grid scrolls sideways: bring the target into view there
-      // without touching the page's vertical scroll.
-      if (scroller.scrollWidth > scroller.clientWidth) {
-        const s = scroller.getBoundingClientRect();
-        const c = next.getBoundingClientRect();
-        const pad = 48;
-        if (c.left < s.left + pad || c.right > s.right - pad) {
-          scroller.scrollLeft += c.left - s.left - s.width / 2 + c.width / 2;
-        }
-      }
     }
 
     window.addEventListener('mdm:result', (e) => setTarget(e.detail.md));
@@ -230,27 +208,10 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
 
 <style>
   .cal {
-    --cell: 11px;
     --gap: 3px;
-    --day-col: 30px;
     display: grid;
-    gap: 24px;
+    gap: 28px;
     scroll-margin-top: 24px;
-  }
-
-  /* ---------- header ---------- */
-
-  .cal__head {
-    display: grid;
-    gap: 20px;
-  }
-
-  @media (min-width: 720px) {
-    .cal__head {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-      gap: 40px;
-    }
   }
 
   .cal__intro {
@@ -261,151 +222,91 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
 
   .cal__title {
     font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(2rem, 4.6vw, 2.75rem);
+    font-weight: 500;
+    font-size: clamp(2.125rem, 4.8vw, 3rem);
     line-height: 1.05;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.01em;
   }
 
-  .cal__stat {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
-
-  .cal__stat-num {
-    font-family: var(--serif);
-    font-size: 3.25rem;
-    line-height: 1;
-    color: var(--green-4);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .cal__stat-text {
-    max-width: 14ch;
-    font-size: 0.75rem;
-    line-height: 1.45;
-    color: var(--ink-soft);
-  }
-
-  /* ---------- panel: a cassette shell with four tiny screws ---------- */
-
+  /* flat, drawn-on surface */
   .cal__panel {
-    position: relative;
+    display: grid;
+    gap: 20px;
+    justify-items: center;
     min-width: 0;
-    background:
-      repeating-linear-gradient(to bottom, transparent 0 2px, rgba(239, 230, 212, 0.012) 2px 3px),
-      var(--bg-raised);
+    padding: 28px 24px 22px;
+    background: var(--bg-raised);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    box-shadow: inset 0 1px 0 var(--line-soft);
   }
 
-  .cal__screw {
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--bg) 0 0.6px, #3a3128 1px);
-    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.6);
-    pointer-events: none;
-  }
-  .cal__screw--tl { top: 8px; left: 8px; }
-  .cal__screw--tr { top: 8px; right: 8px; }
-  .cal__screw--bl { bottom: 8px; left: 8px; }
-  .cal__screw--br { bottom: 8px; right: 8px; }
+  /* ---------- strips: months as rows (desktop) ---------- */
 
-  .cal__scroll {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line) transparent;
-    /* room for the target outline + pulse so it is never clipped */
-    padding: 24px 28px 20px;
-  }
-
-  /* ---------- graph ---------- */
-
-  .gh {
+  .strips {
+    --label: 2.25rem;
+    --cell: 16px;
     display: grid;
-    grid-template-columns: var(--day-col) max-content;
-    grid-template-areas:
-      '. months'
-      'days grid'
-      '. foot';
-    row-gap: 6px;
-    width: max-content;
-    margin-inline: auto;
+    grid-template-columns: var(--label) repeat(31, minmax(0, var(--cell)));
+    grid-auto-flow: row;
+    gap: var(--gap);
+    align-items: center;
+    width: 100%;
+    max-width: calc(var(--label) + 31 * (var(--cell) + var(--gap)));
     font-size: 0.625rem;
     line-height: 1;
     color: var(--ink-soft);
   }
 
-  .gh__months {
-    grid-area: months;
-    display: grid;
-    grid-template-columns: repeat(var(--weeks), var(--cell));
-    column-gap: var(--gap);
-    height: 12px;
-  }
-
-  .gh__months span {
+  .strips__axis {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    padding-bottom: 4px;
     white-space: nowrap;
-    letter-spacing: 0.02em;
   }
 
-  .gh__weekdays {
-    grid-area: days;
-    display: grid;
-    grid-template-rows: repeat(7, var(--cell));
-    row-gap: var(--gap);
-    align-items: center;
+  .strips__month {
+    letter-spacing: 0.04em;
   }
 
-  .gh__grid {
-    grid-area: grid;
-    display: grid;
-    grid-template-rows: repeat(7, var(--cell));
-    grid-auto-flow: column;
-    grid-auto-columns: var(--cell);
-    gap: var(--gap);
-  }
+  /* ---------- strips: months as columns (mobile) ---------- */
 
-  .gh__foot {
-    grid-area: foot;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding-top: 8px;
-  }
+  @media (max-width: 639.98px) {
+    .cal__panel {
+      padding: 22px 12px 18px;
+    }
 
-  .gh__legend {
-    display: flex;
-    align-items: center;
-    gap: var(--gap);
-    letter-spacing: 0.02em;
-  }
+    .strips {
+      --label: 1.5rem;
+      --cell: 24px;
+      grid-template-columns: var(--label) repeat(12, minmax(0, var(--cell)));
+      grid-template-rows: auto repeat(31, auto);
+      grid-auto-flow: column;
+      max-width: calc(var(--label) + 12 * (var(--cell) + var(--gap)));
+    }
 
-  .gh__legend span:first-child {
-    margin-right: 4px;
-  }
-  .gh__legend span:last-child {
-    margin-left: 4px;
+    .strips__axis {
+      padding: 0 6px 0 0;
+      text-align: right;
+    }
+
+    .strips__month {
+      padding-bottom: 6px;
+      text-align: center;
+      letter-spacing: 0;
+    }
   }
 
   /* ---------- cells ---------- */
 
   .cell {
     display: block;
-    width: var(--cell);
-    height: var(--cell);
+    width: 100%;
+    aspect-ratio: 1;
     padding: 0;
     margin: 0;
     border: 0;
     border-radius: 2px;
     background: var(--cell-empty);
-    box-shadow: inset 0 0 0 1px var(--line);
     font: inherit;
     cursor: pointer;
     transition:
@@ -413,48 +314,48 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
       filter 140ms var(--ease);
   }
 
-  .cell[data-level='1'] { background: var(--green-1); box-shadow: none; }
-  .cell[data-level='2'] { background: var(--green-2); box-shadow: none; }
-  .cell[data-level='3'] { background: var(--green-3); box-shadow: none; }
-  .cell[data-level='4'] { background: var(--green-4); box-shadow: none; }
+  .cell[data-level='1'] { background: var(--lv-1); }
+  .cell[data-level='2'] { background: var(--lv-2); }
+  .cell[data-level='3'] { background: var(--lv-3); }
+  .cell[data-level='4'] { background: var(--lv-4); }
 
   .cell--void {
     visibility: hidden;
   }
 
-  .cell--swatch {
-    cursor: default;
-  }
-
   @media (hover: hover) {
     button.cell:hover {
-      transform: scale(1.25);
+      transform: scale(1.3);
       filter: brightness(1.15);
     }
   }
 
-  /* keyboard focus: cream ring */
+  /* keyboard focus: mustard ring */
   button.cell:focus-visible {
-    outline: 2px solid var(--ink);
+    position: relative;
+    z-index: 2;
+    outline: 2px solid var(--yellow);
     outline-offset: 2px;
   }
 
-  /* searched day: accent ring that breathes */
+  /* searched day: thin white ring that breathes */
   button.cell.is-target {
     position: relative;
     z-index: 1;
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-    animation: cell-pulse 2.4s var(--ease) infinite;
+    outline: 1.5px solid var(--target);
+    outline-offset: 1px;
+    animation: cell-pulse 2.6s var(--ease) infinite;
   }
 
-  /* focused target: cream ring inside, accent ring outside — both readable */
+  /* focused target: white ring tight, mustard ring outside, both readable */
   button.cell.is-target:focus-visible {
-    outline-color: var(--ink);
+    z-index: 2;
+    outline: 2px solid var(--yellow);
+    outline-offset: 4px;
     animation: none;
     box-shadow:
-      0 0 0 4px var(--bg-raised),
-      0 0 0 6px var(--accent);
+      0 0 0 1px var(--bg-raised),
+      0 0 0 2.5px var(--target);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -466,22 +367,47 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
     }
   }
 
-  @media (max-width: 639.98px) {
-    .cal {
-      --cell: 10px;
-      --day-col: 26px;
-    }
+  /* ---------- legend ---------- */
 
-    .cal__scroll {
-      padding: 20px 18px 16px;
-    }
+  .cal__legend {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    justify-self: end;
+    font-size: 0.625rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
 
-    .gh {
-      margin-inline: 0;
+  .cal__legend .cell {
+    width: 12px;
+    cursor: default;
+  }
+
+  .cal__legend span:first-child {
+    margin-right: 6px;
+  }
+  .cal__legend span:last-child {
+    margin-left: 6px;
+  }
+
+  @media (min-width: 640px) {
+    .cal__legend {
+      justify-self: center;
+      width: 100%;
+      max-width: calc(2.25rem + 31 * 19px);
+      justify-content: flex-end;
     }
   }
 
-  /* ---------- tooltip ---------- */
+  @media (max-width: 639.98px) {
+    .cal__legend {
+      justify-self: center;
+    }
+  }
+
+  /* ---------- tooltip: a tiny piece of the cover ---------- */
 
   .cal-tip {
     position: fixed;
@@ -493,10 +419,10 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
     font-family: var(--mono);
     font-size: 0.75rem;
     line-height: 1.45;
-    color: var(--bg);
-    background: var(--ink);
+    color: var(--ink);
+    background: var(--blue);
+    border: 1px solid var(--blue-bright);
     border-radius: 6px;
-    box-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.9);
     pointer-events: none;
   }
 
@@ -510,11 +436,12 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
     gap: 16px;
     font-weight: 600;
     letter-spacing: 0.01em;
+    color: var(--yellow);
   }
 
   .cal-tip__count {
     font-weight: 400;
-    color: var(--green-2);
+    color: var(--ink-soft);
     white-space: nowrap;
   }
 
@@ -522,17 +449,17 @@ const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
     margin: 6px 0 0;
     padding: 6px 0 0;
     list-style: none;
-    border-top: 1px solid rgba(15, 13, 11, 0.14);
+    border-top: 1px solid rgba(236, 230, 200, 0.16);
     overflow-wrap: anywhere;
   }
 
   .cal-tip__list :global(li)::before {
     content: '♪ ';
-    color: var(--accent);
+    color: var(--yellow);
   }
 
   .cal-tip__hint {
     margin-top: 4px;
-    color: rgba(15, 13, 11, 0.62);
+    color: var(--ink-soft);
   }
 </style>

@@ -65,3 +65,16 @@ export function resultSentence(result: Result): string {
 export function countCoveredDays(db: DB): number {
   return Object.values(db.days).filter((ids) => ids.length > 0).length;
 }
+
+/** "https://open.spotify.com/track/<22-char id>" (any query / intl prefix) → id; anything else → null */
+export function spotifyTrackId(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:' || parsed.hostname !== 'open.spotify.com') return null;
+  const m = /^\/(?:intl-[a-z-]+\/)?track\/([A-Za-z0-9]{22})\/?$/.exec(parsed.pathname);
+  return m ? m[1] : null;
+}
