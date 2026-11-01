@@ -20,6 +20,7 @@
   --target: #ffffff;
 
   --serif: 'Cormorant Garamond', 'Cormorant', Garamond, 'Iowan Old Style', Georgia, serif;
+  --round: 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --gutter: 16px;
