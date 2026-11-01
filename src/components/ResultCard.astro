@@ -73,8 +73,9 @@
     flex-direction: column;
     min-width: 0;
     padding: 20px 18px 16px;
-    background: var(--blue);
-    border-radius: var(--radius);
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
     animation: rise 460ms var(--ease) both;
     animation-delay: calc(var(--i, 0) * 70ms + 80ms);
   }
@@ -115,12 +116,15 @@
     display: none;
   }
 
+  /* Spotify's player has its own 12px corners. With a dark page the iframe would paint an opaque
+     light canvas behind them (white corners), so give it the light scheme to keep it transparent. */
   .card__frame {
     display: block;
     height: 80px;
     overflow: hidden;
     border-radius: 12px;
-    background: var(--bg);
+    background: transparent;
+    isolation: isolate;
   }
 
   .card__frame iframe {
@@ -128,6 +132,9 @@
     width: 100%;
     height: 80px;
     border: 0;
+    border-radius: 12px;
+    color-scheme: light;
+    background: transparent;
   }
 
   .card__link {

@@ -73,7 +73,7 @@ function buildPlayer(trackId: string, title: string): HTMLElement {
   const frame = document.createElement('div');
   frame.className = 'card__frame';
   const iframe = document.createElement('iframe');
-  iframe.setAttribute('src', `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`);
+  iframe.setAttribute('src', `https://open.spotify.com/embed/track/${trackId}?utm_source=generator`);
   iframe.setAttribute('width', '100%');
   iframe.setAttribute('height', '80');
   iframe.setAttribute('frameborder', '0');
