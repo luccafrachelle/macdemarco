@@ -5,3 +5,7 @@ __pycache__/
 .venv/
 .env
 .superpowers/
+.DS_Store
+.idea/
+.env.production
+.claude/

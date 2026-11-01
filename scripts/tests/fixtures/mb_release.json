@@ -1,0 +1,221 @@
+{
+ "relations": [
+  {
+   "attributes": [],
+   "type-id": "08445ccf-7b99-4438-9f9a-fb9ac18099ee",
+   "type": "free streaming",
+   "end": null,
+   "ended": false,
+   "direction": "forward",
+   "target-credit": "",
+   "attribute-values": {},
+   "url": {
+    "id": "ae2b5655-4645-427f-9827-fd4e325c6497",
+    "resource": "https://open.spotify.com/album/70hX7IYqmUGV97OXs2v848"
+   },
+   "target-type": "url",
+   "source-credit": "",
+   "attribute-ids": {},
+   "begin": null
+  },
+  {
+   "url": {
+    "id": "f55c67d4-9a06-4504-a250-5bb0c3558a81",
+    "resource": "https://www.deezer.com/album/429737827"
+   },
+   "direction": "forward",
+   "attribute-values": {},
+   "target-credit": "",
+   "end": null,
+   "ended": false,
+   "type": "free streaming",
+   "type-id": "08445ccf-7b99-4438-9f9a-fb9ac18099ee",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "source-credit": "",
+   "target-type": "url"
+  },
+  {
+   "ended": false,
+   "end": null,
+   "url": {
+    "id": "4f33b5cb-8cdf-41e3-89c4-417de8c7f9bf",
+    "resource": "https://music.apple.com/gb/album/1681871263"
+   },
+   "attribute-values": {},
+   "target-credit": "",
+   "direction": "forward",
+   "attributes": [],
+   "type-id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+   "type": "purchase for download",
+   "attribute-ids": {},
+   "begin": null,
+   "target-type": "url",
+   "source-credit": ""
+  },
+  {
+   "attribute-ids": {},
+   "begin": null,
+   "target-type": "url",
+   "source-credit": "",
+   "end": null,
+   "ended": false,
+   "direction": "forward",
+   "attribute-values": {},
+   "target-credit": "",
+   "url": {
+    "id": "4f33b5cb-8cdf-41e3-89c4-417de8c7f9bf",
+    "resource": "https://music.apple.com/gb/album/1681871263"
+   },
+   "attributes": [],
+   "type-id": "320adf26-96fa-4183-9045-1f5f32f833cb",
+   "type": "streaming"
+  },
+  {
+   "type": "streaming",
+   "attributes": [],
+   "type-id": "320adf26-96fa-4183-9045-1f5f32f833cb",
+   "url": {
+    "resource": "https://tidal.com/album/289141161",
+    "id": "23408eb0-18d5-419b-92de-1e2234b1c7fc"
+   },
+   "target-credit": "",
+   "attribute-values": {},
+   "direction": "forward",
+   "ended": false,
+   "end": null,
+   "source-credit": "",
+   "target-type": "url",
+   "begin": null,
+   "attribute-ids": {}
+  }
+ ],
+ "asin": null,
+ "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+ "cover-art-archive": {
+  "artwork": true,
+  "count": 1,
+  "front": true,
+  "back": false,
+  "darkened": false
+ },
+ "disambiguation": "",
+ "packaging": "None",
+ "release-events": [
+  {
+   "area": {
+    "type-id": null,
+    "disambiguation": "",
+    "type": null,
+    "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+    "name": "[Worldwide]",
+    "sort-name": "[Worldwide]",
+    "iso-3166-1-codes": [
+     "XW"
+    ]
+   },
+   "date": "2023-04-21"
+  }
+ ],
+ "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+ "status": "Official",
+ "media": [
+  {
+   "id": "7e555035-2ee2-4a7c-b880-08b1ad7ef15e",
+   "title": "",
+   "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+   "position": 1,
+   "track-offset": 0,
+   "tracks": [
+    {
+     "id": "fb15a1c1-df08-4eba-a13f-9dbe91bd9234",
+     "title": "20180512",
+     "position": 1,
+     "length": 248000,
+     "recording": {
+      "id": "3aa9c63b-685d-4ae3-a878-56e011822123",
+      "title": "20180512",
+      "disambiguation": "",
+      "first-release-date": "2023-04-21",
+      "video": false,
+      "length": 248000
+     },
+     "number": "1"
+    },
+    {
+     "recording": {
+      "video": false,
+      "length": 151000,
+      "first-release-date": "2023-04-21",
+      "disambiguation": "",
+      "id": "37162551-7f23-417a-b491-933bad360274",
+      "title": "20180529"
+     },
+     "number": "2",
+     "length": 151000,
+     "title": "20180529",
+     "id": "45ae672c-88e3-4244-a5be-50fc99757b14",
+     "position": 2
+    },
+    {
+     "recording": {
+      "id": "71ea2222-ad0c-46ff-acb4-c650e3760de7",
+      "title": "20180701",
+      "disambiguation": "",
+      "first-release-date": "2023-04-21",
+      "video": false,
+      "length": 126000
+     },
+     "number": "3",
+     "position": 3,
+     "id": "32ab8829-5a67-4f27-9ed3-bd7c1f6d7e55",
+     "title": "20180701",
+     "length": 126000
+    },
+    {
+     "title": "20180702",
+     "id": "b3e12f94-3896-4cc1-baac-83524a07d383",
+     "position": 4,
+     "length": 141000,
+     "recording": {
+      "disambiguation": "",
+      "title": "20180702",
+      "id": "6f981468-5172-4698-bedf-c955550bc91c",
+      "video": false,
+      "length": 141000,
+      "first-release-date": "2023-04-21"
+     },
+     "number": "4"
+    },
+    {
+     "recording": {
+      "title": "20180702 2",
+      "id": "babe3199-1997-4b8f-80fb-a5a780c385da",
+      "disambiguation": "",
+      "first-release-date": "2023-04-21",
+      "length": 158000,
+      "video": false
+     },
+     "number": "5",
+     "length": 158000,
+     "position": 5,
+     "title": "20180702 2",
+     "id": "8dbc4549-1f87-4f77-a68b-74dcc58d24e8"
+    }
+   ],
+   "track-count": 199,
+   "format": "Digital Media"
+  }
+ ],
+ "barcode": "00842812191985",
+ "country": "XW",
+ "title": "One Wayne G",
+ "id": "0efe59ec-4e29-4060-8b82-7c5d3b53e4be",
+ "date": "2023-04-21",
+ "text-representation": {
+  "language": "eng",
+  "script": "Latn"
+ },
+ "quality": "normal"
+}
