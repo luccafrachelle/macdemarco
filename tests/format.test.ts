@@ -10,7 +10,11 @@ const song = (md: string): Song => ({
   spotify: '',
   exact_link: true,
 });
-const match = (md: string, distance: number): Match => ({ md, distance, songs: [song(md)] });
+const match = (md: string, distance: number, n = 1): Match => ({
+  md,
+  distance,
+  songs: Array.from({ length: n }, () => song(md)),
+});
 
 describe('monthName', () => {
   test('lowercase spanish names', () => {
@@ -87,6 +91,44 @@ describe('resultSentence', () => {
     };
     expect(resultSentence(r)).toBe(
       'No hay canción para el 13 de marzo, pero hay dos a 1 día: una antes y una después.',
+    );
+  });
+
+  test('tie with more than two songs in total', () => {
+    const r: Result = {
+      kind: 'nearest',
+      md: '08-05',
+      before: match('08-02', 3, 2),
+      after: match('08-08', 3),
+    };
+    expect(resultSentence(r)).toBe(
+      'No hay canción para el 5 de agosto, pero hay canciones a 3 días: antes y después.',
+    );
+  });
+
+  test('tie with more than two songs at 1 day uses singular', () => {
+    const r: Result = {
+      kind: 'nearest',
+      md: '03-13',
+      before: match('03-12', 1),
+      after: match('03-14', 1, 3),
+    };
+    expect(resultSentence(r)).toBe(
+      'No hay canción para el 13 de marzo, pero hay canciones a 1 día: antes y después.',
+    );
+  });
+
+  test('single side with several songs', () => {
+    const r: Result = { kind: 'nearest', md: '03-14', after: match('03-17', 3, 2) };
+    expect(resultSentence(r)).toBe(
+      'No hay canción para el 14 de marzo, pero las más cercanas son 3 días después.',
+    );
+  });
+
+  test('single side with several songs at 1 day', () => {
+    const r: Result = { kind: 'nearest', md: '02-29', before: match('02-28', 1, 2) };
+    expect(resultSentence(r)).toBe(
+      'No hay canción para el 29 de febrero, pero las más cercanas son 1 día antes.',
     );
   });
 

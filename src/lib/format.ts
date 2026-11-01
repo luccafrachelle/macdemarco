@@ -41,12 +41,20 @@ export function resultSentence(result: Result): string {
 
   const { before, after } = result;
   if (before && after) {
-    return `No hay canción para el ${when}, pero hay dos a ${formatDays(before.distance)}: una antes y una después.`;
+    const days = formatDays(before.distance);
+    if (before.songs.length + after.songs.length > 2) {
+      return `No hay canción para el ${when}, pero hay canciones a ${days}: antes y después.`;
+    }
+    return `No hay canción para el ${when}, pero hay dos a ${days}: una antes y una después.`;
   }
   const match = before ?? after;
   if (!match) return `No hay canción para el ${when}.`;
   const side = before ? 'antes' : 'después';
-  return `No hay canción para el ${when}, pero la más cercana es ${formatDays(match.distance)} ${side}.`;
+  const days = formatDays(match.distance);
+  if (match.songs.length > 1) {
+    return `No hay canción para el ${when}, pero las más cercanas son ${days} ${side}.`;
+  }
+  return `No hay canción para el ${when}, pero la más cercana es ${days} ${side}.`;
 }
 
 export function countCoveredDays(db: DB): number {

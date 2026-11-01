@@ -21,7 +21,7 @@
     </div>
     <footer class="card__foot">
       <span class="card__album"></span>
-      <a class="card__link" target="_blank" rel="noopener">Escuchar en Spotify <span aria-hidden="true">↗</span></a>
+      <a class="card__link" target="_blank" rel="noopener">Escuchar en Spotify<span class="card__link-arrow" aria-hidden="true">↗</span><span class="card__link-title visually-hidden"></span></a>
     </footer>
   </article>
 </template>
@@ -204,11 +204,11 @@
     background: var(--ink);
   }
 
-  .card__link span {
+  .card__link-arrow {
     transition: transform 160ms var(--ease);
   }
 
-  .card__link:hover span {
+  .card__link:hover .card__link-arrow {
     transform: translate(2px, -2px);
   }
 </style>

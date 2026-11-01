@@ -92,7 +92,8 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   }
 
   select:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     box-shadow:
       0 0 0 2px var(--paper),
       0 0 0 4px var(--accent);
@@ -140,7 +141,8 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   }
 
   .search-btn:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     box-shadow:
       0 3px 0 0 var(--accent),
       0 0 0 3px var(--paper),

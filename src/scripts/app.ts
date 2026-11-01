@@ -1,4 +1,4 @@
-import { clampDay, daysInMonth, findSongs, parseHash } from '../lib/nearest';
+import { clampDay, daysInMonth, findSongs, parseHash, toMd } from '../lib/nearest';
 import { formatFullDate, resultSentence, spokenDate } from '../lib/format';
 import type { DB, Match, Result, Song } from '../lib/types';
 
@@ -53,11 +53,13 @@ monthSelect.addEventListener('change', () => {
   fillDays(Number(monthSelect.value), Number(daySelect.value));
 });
 
-let userInitiated = false;
+/** True only while the initial hash search runs: that one should not scroll. */
+let quiet = false;
+/** md of the result currently shown, used to ignore no-op hash changes. */
+let currentMd: string | null = null;
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
-  userInitiated = true;
   search(Number(monthSelect.value), Number(daySelect.value));
 });
 
@@ -77,7 +79,7 @@ function buildCard(song: Song, index: number): HTMLElement {
   const link = card.querySelector<HTMLAnchorElement>('.card__link')!;
   if (song.spotify) {
     link.href = song.spotify;
-    link.setAttribute('aria-label', `Escuchar ${song.title} en Spotify (abre en una pestaña nueva)`);
+    link.querySelector('.card__link-title')!.textContent = `: ${song.title} (abre en una pestaña nueva)`;
   } else {
     link.remove();
   }
@@ -129,6 +131,10 @@ function render(result: Result): void {
 
 window.addEventListener('mdm:search', (event) => {
   const { month, day } = event.detail;
+  // Every search scrolls the result into view (form submit, calendar click,
+  // hash change) except the initial one from the URL on page load.
+  const shouldScroll = !quiet;
+  quiet = false;
   let result: Result;
   try {
     result = findSongs(month, day, db);
@@ -138,22 +144,32 @@ window.addEventListener('mdm:search', (event) => {
 
   setInputs(month, day);
   render(result);
+  currentMd = result.md;
+  // replaceState does not fire hashchange, so this cannot loop.
   history.replaceState(null, '', `#${result.md}`);
   window.dispatchEvent(new CustomEvent('mdm:result', { detail: { md: result.md } }));
 
-  if (userInitiated) {
-    const rect = resultBox.getBoundingClientRect();
-    if (rect.top > window.innerHeight * 0.75) {
+  if (shouldScroll) {
+    const { top } = resultBox.getBoundingClientRect();
+    // Only scroll when the result starts off-screen (above, e.g. from the
+    // calendar) or low enough that the user would not see it.
+    if (top < 0 || top > window.innerHeight * 0.75) {
       resultBox.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
     }
   }
-  userInitiated = false;
+});
+
+window.addEventListener('hashchange', () => {
+  const parsed = parseHash(location.hash);
+  if (!parsed || toMd(parsed.month, parsed.day) === currentMd) return;
+  search(parsed.month, parsed.day);
 });
 
 /* ---------- boot ---------- */
 
 const fromHash = parseHash(location.hash);
 if (fromHash) {
+  quiet = true;
   search(fromHash.month, fromHash.day);
 } else {
   const today = new Date();
