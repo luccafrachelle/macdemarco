@@ -67,6 +67,13 @@ body::after {
   background-size: 220px 220px;
 }
 
+/* Phones: skip the full-screen grain layer, it costs compositing on every scroll. */
+@media (pointer: coarse) {
+  body::after {
+    display: none;
+  }
+}
+
 ::selection {
   background: var(--yellow);
   color: var(--bg);

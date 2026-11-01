@@ -69,18 +69,57 @@ function search(month: number, day: number): void {
 
 /* ---------- rendering ---------- */
 
-function buildPlayer(trackId: string, title: string): HTMLElement {
-  const frame = document.createElement('div');
-  frame.className = 'card__frame';
+// Each Spotify embed ships ~570 KB of its own JS. On phones, mounting one per card at once makes the
+// search feel sluggish, so there each card gets a light stand-in and the real player loads on tap
+// (one open at a time). Desktop keeps the players mounted right away.
+const lightPlayers = window.matchMedia('(max-width: 639px), (pointer: coarse)');
+let openPlayer: { frame: HTMLElement; restore: () => void } | null = null;
+
+function spotifyIframe(trackId: string, title: string, lazy: boolean): HTMLIFrameElement {
   const iframe = document.createElement('iframe');
   iframe.setAttribute('src', `https://open.spotify.com/embed/track/${trackId}?utm_source=generator`);
   iframe.setAttribute('width', '100%');
   iframe.setAttribute('height', '80');
   iframe.setAttribute('frameborder', '0');
   iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
-  iframe.setAttribute('loading', 'lazy');
+  if (lazy) iframe.setAttribute('loading', 'lazy');
   iframe.setAttribute('title', `${title} en Spotify`);
-  frame.append(iframe);
+  return iframe;
+}
+
+function playButton(onPlay: () => void, title: string): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'card__play';
+  const icon = document.createElement('span');
+  icon.className = 'card__play-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  const label = document.createElement('span');
+  label.className = 'card__play-label';
+  label.textContent = 'Escuchar acá';
+  const hidden = document.createElement('span');
+  hidden.className = 'visually-hidden';
+  hidden.textContent = `: ${title}`;
+  label.append(hidden);
+  button.append(icon, label);
+  button.addEventListener('click', onPlay);
+  return button;
+}
+
+function buildPlayer(trackId: string, title: string): HTMLElement {
+  const frame = document.createElement('div');
+  frame.className = 'card__frame';
+  if (!lightPlayers.matches) {
+    frame.append(spotifyIframe(trackId, title, true));
+    return frame;
+  }
+  const restore = () => frame.replaceChildren(playButton(open, title));
+  function open(): void {
+    if (openPlayer && openPlayer.frame !== frame && openPlayer.frame.isConnected) openPlayer.restore();
+    frame.replaceChildren(spotifyIframe(trackId, title, false));
+    openPlayer = { frame, restore };
+  }
+  restore();
   return frame;
 }
 
@@ -145,6 +184,7 @@ function render(result: Result): void {
     }
   }
 
+  openPlayer = null;
   resultBox.replaceChildren(sentence, ...groups);
 }
 
