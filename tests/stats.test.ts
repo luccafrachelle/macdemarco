@@ -123,10 +123,10 @@ describe('yearBars', () => {
 
 describe('takeaways', () => {
   test('month', () => {
-    expect(monthTakeaway(monthBoxes(SONGS))).toBe('Enero es el mes más cargado: 5 canciones. Febrero casi no tiene: 0.');
+    expect(monthTakeaway(monthBoxes(SONGS))).toBe('Enero es el mes con más canciones: 5 canciones. Febrero casi no tiene: 0.');
   });
   test('weekday', () => {
-    expect(weekdayTakeaway(weekdayCounts(SONGS))).toBe('Los miércoles son su día: 3 canciones.');
+    expect(weekdayTakeaway(weekdayCounts(SONGS))).toBe('Los miércoles son día fav para hacer música: 3 canciones.');
   });
   test('year, with an empty year', () => {
     expect(yearTakeaway(yearBars(SONGS))).toBe('2019 fue el pico (5). En 2020 no hay ni una.');
@@ -219,6 +219,6 @@ describe('formatting helpers', () => {
     expect(fmtNum(16)).toBe('16');
   });
   test('titleTakeaway', () => {
-    expect(titleTakeaway(181, 65)).toBe('El 74% se llama solo con la fecha. El resto le suma algo.');
+    expect(titleTakeaway(181, 65)).toBe('El 74% es solo la fecha. El resto tiene un nombre aparte.');
   });
 });
