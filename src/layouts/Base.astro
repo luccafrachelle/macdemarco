@@ -3,13 +3,10 @@ import '../styles/global.css';
 
 interface Props {
   title?: string;
-  description?: string;
 }
 
-const {
-  title = 'Mac en tu cumple',
-  description = '¿Hay alguna canción de Mac DeMarco en tu cumple? Poné la fecha y fijate.',
-} = Astro.props;
+// No description on purpose: link previews show only the title and the cover.
+const { title = 'Mac en tu cumple' } = Astro.props;
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const canonical = Astro.site ? new URL(base, Astro.site).href : undefined;
@@ -22,14 +19,12 @@ const ogImage = Astro.site ? new URL(`${base}one-wayne-g.jpg`, Astro.site).href 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <meta name="description" content={description} />
     <meta name="theme-color" content="#07060f" />
     <meta name="color-scheme" content="dark" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_UY" />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
     {canonical && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="600" />
