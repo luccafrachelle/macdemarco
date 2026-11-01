@@ -41,14 +41,17 @@ def _track_id(release: dict, spotify: dict, norm: str):
     return None
 
 
-def build(releases: list[dict], spotify: dict[str, list[dict]]) -> dict:
+def build(releases: list[dict], spotify: dict[str, list[dict]],
+          listenbrainz: dict[str, str] | None = None) -> dict:
+    listenbrainz = listenbrainz or {}
     chosen: dict[str, tuple] = {}  # norm -> (rank, title, release, track_id)
     for release in releases:
         for track in release.get("tracks", []):
             norm = normalize(track["title"])
             if not norm:
                 continue
-            tid = _track_id(release, spotify, norm)
+            tid = (_track_id(release, spotify, norm)
+                   or listenbrainz.get(f"{release['release_title']}|{track['title']}"))
             rank = (tid is None,) + _date_key(release)
             if norm not in chosen or rank < chosen[norm][0]:
                 chosen[norm] = (rank, track["title"], release, tid)
@@ -61,7 +64,7 @@ def build(releases: list[dict], spotify: dict[str, list[dict]]) -> dict:
         if tid:
             link, exact = f"https://open.spotify.com/track/{tid}", True
         else:
-            link, exact = "https://open.spotify.com/search/" + quote(f"{title} mac demarco"), False
+            link, exact = "https://open.spotify.com/search/" + quote(f"{title} mac demarco", safe=""), False
         songs.append({"title": title, "date": d.isoformat(), "md": d.strftime("%m-%d"),
                       "album": release["release_title"], "spotify": link, "exact_link": exact})
     songs.sort(key=lambda s: (s["md"], s["date"], s["title"]))
@@ -72,6 +75,17 @@ def build(releases: list[dict], spotify: dict[str, list[dict]]) -> dict:
         days[s["md"]].append(i)
     generated = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {"generated_at": generated, "songs": songs, "days": days}
+
+
+def _wanted_listenbrainz(releases: list[dict], spotify: dict[str, list[dict]]) -> list[dict]:
+    wanted = []
+    for release in releases:
+        for track in release.get("tracks", []):
+            norm = normalize(track["title"])
+            if norm and extract_date(track["title"]) and not _track_id(release, spotify, norm):
+                wanted.append({"release_name": release["release_title"],
+                               "track_name": track["title"]})
+    return wanted
 
 
 def stats(db: dict) -> str:
@@ -106,7 +120,10 @@ def main() -> None:
     else:
         spotify = json.loads(SPOTIFY_PATH.read_text(encoding="utf-8"))
 
-    db = build(releases, spotify)
+    from scripts.fetch_listenbrainz import fetch_all as fetch_lb
+    listenbrainz = fetch_lb(_wanted_listenbrainz(releases, spotify), refresh=args.refresh)
+
+    db = build(releases, spotify, listenbrainz)
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(db, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(stats(db))

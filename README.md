@@ -1,36 +1,44 @@
-# Mac DeMarco: canciones de cumpleaños
+# Mac en tu cumple
 
-Sitio estático (Astro) con las canciones de Mac DeMarco para cada día del año. Proyecto fan, no oficial: no está afiliado a Mac DeMarco ni a su sello.
+Mac DeMarco tiene la costumbre de ponerle a sus demos la fecha en que las grabó como título. *One Wayne G* son 199 temas que se llaman `20190805`, `20210217 Scarecrow` y así, y los discos que sacó después siguieron con la misma idea.
 
-## Regenerar los datos
+Un día me pregunté si habría alguna de mi cumpleaños. Esta página responde eso: elegís día y mes y te muestra la canción, o la más cercana si ese día no tiene ninguna. Cada una va directo a Spotify.
 
-El pipeline en Python genera `src/data/songs.json`:
+→ **[luccafrachelle.github.io/macdemarco](https://luccafrachelle.github.io/macdemarco/)**
+
+Hoy hay 246 canciones con fecha, repartidas en 153 de los 366 días del año.
+
+## Cómo se arman los datos
+
+Hay un script en Python que:
+
+1. baja la discografía de [MusicBrainz](https://musicbrainz.org),
+2. saca la fecha del título de cada tema con una regex (sobre todo el formato `YYYYMMDD`),
+3. busca el link de cada tema en Spotify, primero en el embed público del álbum y, para lo que falta, en [ListenBrainz](https://listenbrainz.org),
+4. escribe todo en `src/data/songs.json`.
+
+El resultado queda commiteado, así que la web no necesita correr nada de esto. Para actualizarlo cuando salga algo nuevo (Python 3.11+):
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 MB_CONTACT=tu@email.com .venv/bin/python -m scripts.build_db --refresh
 ```
 
-Nota: unos ~99 temas usan un link de búsqueda de Spotify en vez de link directo, porque el embed público trunca "One Wayne G" a 100 temas.
+MusicBrainz pide un email de contacto en cada request; por eso va en `MB_CONTACT`.
 
-`src/data/songs.json` y `data/raw/` están commiteados y el CI no ejecuta el pipeline de Python (requiere Python 3.11+).
+## La web
 
-## Tests
-
-```bash
-.venv/bin/pytest   # pipeline de datos
-npm test           # frontend (vitest)
-```
-
-## Desarrollo local
+Es Astro estático, sin backend y casi sin JavaScript.
 
 ```bash
 npm ci
-npm run dev
+npm run dev        # http://localhost:4321
+npm test           # tests de la parte web
+.venv/bin/pytest   # tests del script de datos
 ```
 
-Para probar un subpath: `SITE_URL=https://x.github.io BASE_PATH=/macdemarco npm run build && npx astro preview`.
+Cada push a `main` se publica solo en GitHub Pages (`.github/workflows/deploy.yml`).
 
-## Deploy
+---
 
-GitHub Actions publica en GitHub Pages en cada push a `main` (`.github/workflows/deploy.yml`). Primero activá Pages en el repo: Settings > Pages > Source: "GitHub Actions". `SITE_URL` y `BASE_PATH` se toman automáticamente de `actions/configure-pages`.
+Lo hizo un fan; no tiene nada que ver con Mac ni con su sello.

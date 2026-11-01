@@ -1,83 +1,77 @@
 ---
 /*
- * GitHub-style calendar: 12 months × 31 days, green by number of songs.
+ * GitHub contribution graph over the reference leap year 2024: columns are
+ * weeks (Monday first), rows are weekdays, green by number of songs.
  * All cells render at build time; the <script> below only adds the shared
  * tooltip, click → `mdm:search`, and the `.is-target` highlight on `mdm:result`.
  */
 import db from '../data/songs.json';
-import { cellLabel, levelFor, monthAbbr } from '../lib/calendar';
-import { countCoveredDays, monthName } from '../lib/format';
-import { daysInMonth, toMd } from '../lib/nearest';
+import { cellLabel, levelFor, monthAbbr, monthLabelColumns, weekGrid } from '../lib/calendar';
+import { countCoveredDays } from '../lib/format';
 import type { DB } from '../lib/types';
 
 const data = db as DB;
 const covered = countCoveredDays(data);
 
-const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
-const AXIS_MARKS = new Set([1, 5, 10, 15, 20, 25, 31]);
-
-const months = Array.from({ length: 12 }, (_, i) => {
-  const month = i + 1;
-  return {
-    month,
-    name: monthName(month),
-    abbr: monthAbbr(month),
-    cells: DAYS.map((day) => {
-      if (day > daysInMonth(month)) return { void: true as const, day };
-      const md = toMd(month, day);
-      const count = data.days[md]?.length ?? 0;
-      return { void: false as const, day, md, level: levelFor(count), label: cellLabel(md, count) };
-    }),
-  };
-});
+const weeks = weekGrid(2024).map((col) =>
+  col.map((cell) => {
+    if (!cell) return null;
+    const count = data.days[cell.md]?.length ?? 0;
+    return { md: cell.md, level: levelFor(count), label: cellLabel(cell.md, count) };
+  }),
+);
+const months = monthLabelColumns(2024).map(({ month, col }) => ({ col, abbr: monthAbbr(month) }));
+const WEEKDAYS = ['lun', '', 'mié', '', 'vie', '', ''];
 ---
 
 <section id="calendar" class="cal" aria-labelledby="cal-title">
-  <div class="cal__intro">
-    <p class="eyebrow">Lado B · el año entero</p>
-    <h2 id="cal-title" class="cal__title">El año, <em>día por día</em>.</h2>
-    <p class="lede cal__lede">
-      Cada cuadrado es un día. Los verdes tienen canción, y cuanto más oscuro el verde, más canciones caen
-      ese día. Tocá cualquiera para buscarlo.
-    </p>
+  <div class="cal__head">
+    <div class="cal__intro">
+      <h2 id="cal-title" class="cal__title">Todo el año</h2>
+      <p class="lede cal__lede">
+        Cada cuadradito es un día. Verde si hay canción, más verde si hay varias. Tocá uno para verlo.
+      </p>
+    </div>
     <p class="cal__stat">
       <span class="cal__stat-num">{covered}</span>
-      <span class="cal__stat-text">de 366 días<br />tienen canción</span>
+      <span class="cal__stat-text">de 366 días tienen canción</span>
     </p>
   </div>
 
   <div class="cal__panel">
-    <div class="cal__scroll">
-      <div class="cal__grid" id="cal-grid">
-        <div class="cal__axis" aria-hidden="true">
-          <span class="cal__label"></span>
-          {DAYS.map((d) => <span class="cal__tick">{AXIS_MARKS.has(d) ? d : ''}</span>)}
-        </div>
-        {
-          months.map((m) => (
-            <div class="cal__month" role="group" aria-label={m.name}>
-              <span class="cal__label" aria-hidden="true">
-                {m.abbr}
-              </span>
-              {m.cells.map((c) =>
-                c.void ? (
-                  <span class="cell cell--void" aria-hidden="true" />
-                ) : (
-                  <button type="button" class="cell" data-md={c.md} data-level={c.level} aria-label={c.label} />
-                ),
-              )}
-            </div>
-          ))
-        }
-      </div>
-    </div>
+    <span class="cal__screw cal__screw--tl" aria-hidden="true"></span>
+    <span class="cal__screw cal__screw--tr" aria-hidden="true"></span>
+    <span class="cal__screw cal__screw--bl" aria-hidden="true"></span>
+    <span class="cal__screw cal__screw--br" aria-hidden="true"></span>
 
-    <div class="cal__legend" aria-hidden="true">
-      <span>menos</span>
-      <span class="cal__swatches">
-        {[0, 1, 2, 3, 4].map((level) => <span class="cell cell--swatch" data-level={level} />)}
-      </span>
-      <span>más</span>
+    <div class="cal__scroll" id="cal-scroll">
+      <div class="gh" style={`--weeks: ${weeks.length}`}>
+        <div class="gh__months" aria-hidden="true">
+          {months.map((m) => <span style={`grid-column: ${m.col + 1} / span 4`}>{m.abbr}</span>)}
+        </div>
+        <div class="gh__weekdays" aria-hidden="true">
+          {WEEKDAYS.map((d) => <span>{d}</span>)}
+        </div>
+        <div class="gh__grid" id="cal-grid">
+          {
+            weeks.flat().map((c) =>
+              c ? (
+                <button type="button" class="cell" data-md={c.md} data-level={c.level} aria-label={c.label} />
+              ) : (
+                <span class="cell cell--void" aria-hidden="true" />
+              ),
+            )
+          }
+        </div>
+        <div class="gh__foot">
+          <span class="side-mark" aria-hidden="true">B</span>
+          <div class="gh__legend" aria-hidden="true">
+            <span>menos</span>
+            {[0, 1, 2, 3, 4].map((level) => <span class="cell cell--swatch" data-level={level} />)}
+            <span>más</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -104,7 +98,7 @@ const months = Array.from({ length: 12 }, (_, i) => {
 
   if (grid && tip && dbNode) {
     const db = JSON.parse(dbNode.textContent ?? '{}') as DB;
-    const scroller = grid.parentElement as HTMLElement;
+    const scroller = document.getElementById('cal-scroll') ?? grid;
     const tipDate = tip.querySelector<HTMLElement>('.cal-tip__date')!;
     const tipCount = tip.querySelector<HTMLElement>('.cal-tip__count')!;
     const tipList = tip.querySelector<HTMLUListElement>('.cal-tip__list')!;
@@ -208,7 +202,7 @@ const months = Array.from({ length: 12 }, (_, i) => {
     let target: HTMLElement | null = null;
 
     function setTarget(md: string): void {
-      const next = grid!.querySelector<HTMLElement>(`button.cell[data-md="${md}"]`);
+      const next = grid!.querySelector<HTMLElement>(`button.cell[data-md="${CSS.escape(md)}"]`);
       if (!next || next === target) return;
       target?.classList.remove('is-target');
       next.classList.add('is-target');
@@ -236,60 +230,47 @@ const months = Array.from({ length: 12 }, (_, i) => {
 
 <style>
   .cal {
-    --cell: 12px;
-    --cell-gap: 3px;
-    --label: 26px;
+    --cell: 11px;
+    --gap: 3px;
+    --day-col: 30px;
     display: grid;
-    gap: 28px;
+    gap: 24px;
     scroll-margin-top: 24px;
   }
 
-  @media (min-width: 720px) {
-    .cal {
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 56px;
-      align-items: start;
-    }
+  /* ---------- header ---------- */
+
+  .cal__head {
+    display: grid;
+    gap: 20px;
   }
 
-  /* ---------- intro column ---------- */
+  @media (min-width: 720px) {
+    .cal__head {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 40px;
+    }
+  }
 
   .cal__intro {
     display: grid;
-    gap: 16px;
-    align-content: start;
-    max-width: 42ch;
-  }
-
-  @media (min-width: 720px) {
-    .cal__intro {
-      position: sticky;
-      top: 32px;
-      padding-top: 8px;
-    }
+    gap: 10px;
+    max-width: 48ch;
   }
 
   .cal__title {
     font-family: var(--serif);
     font-weight: 400;
-    font-size: clamp(2rem, 4.6vw, 3rem);
+    font-size: clamp(2rem, 4.6vw, 2.75rem);
     line-height: 1.05;
     letter-spacing: -0.01em;
-    text-wrap: balance;
-  }
-
-  .cal__title em {
-    font-style: italic;
-    color: var(--accent);
   }
 
   .cal__stat {
     display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-top: 8px;
-    padding-top: 18px;
-    border-top: 1px dashed var(--hairline);
+    align-items: baseline;
+    gap: 12px;
   }
 
   .cal__stat-num {
@@ -301,92 +282,122 @@ const months = Array.from({ length: 12 }, (_, i) => {
   }
 
   .cal__stat-text {
+    max-width: 14ch;
     font-size: 0.75rem;
-    line-height: 1.5;
-    letter-spacing: 0.02em;
+    line-height: 1.45;
     color: var(--ink-soft);
   }
 
-  /* ---------- panel (cassette-label frame) ---------- */
+  /* ---------- panel: a cassette shell with four tiny screws ---------- */
 
   .cal__panel {
+    position: relative;
     min-width: 0;
-    background: var(--paper);
-    border: 1.5px solid var(--ink);
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 2px, rgba(239, 230, 212, 0.012) 2px 3px),
+      var(--bg-raised);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    box-shadow: 0 1px 0 var(--hairline);
-    overflow: hidden;
+    box-shadow: inset 0 1px 0 var(--line-soft);
   }
+
+  .cal__screw {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--bg) 0 0.6px, #3a3128 1px);
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+  }
+  .cal__screw--tl { top: 8px; left: 8px; }
+  .cal__screw--tr { top: 8px; right: 8px; }
+  .cal__screw--bl { bottom: 8px; left: 8px; }
+  .cal__screw--br { bottom: 8px; right: 8px; }
 
   .cal__scroll {
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: thin;
-    scrollbar-color: var(--hairline) transparent;
+    scrollbar-color: var(--line) transparent;
     /* room for the target outline + pulse so it is never clipped */
-    padding: 20px 22px 16px;
+    padding: 24px 28px 20px;
   }
 
-  /* Desktop: months are columns, days run down. */
-  .cal__grid {
-    display: flex;
-    gap: var(--cell-gap);
+  /* ---------- graph ---------- */
+
+  .gh {
+    display: grid;
+    grid-template-columns: var(--day-col) max-content;
+    grid-template-areas:
+      '. months'
+      'days grid'
+      '. foot';
+    row-gap: 6px;
     width: max-content;
+    margin-inline: auto;
     font-size: 0.625rem;
     line-height: 1;
     color: var(--ink-soft);
   }
 
-  .cal__month,
-  .cal__axis {
-    display: flex;
-    flex-direction: column;
-    gap: var(--cell-gap);
+  .gh__months {
+    grid-area: months;
+    display: grid;
+    grid-template-columns: repeat(var(--weeks), var(--cell));
+    column-gap: var(--gap);
+    height: 12px;
   }
 
-  .cal__label {
-    height: 18px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: lowercase;
+  .gh__months span {
     white-space: nowrap;
+    letter-spacing: 0.02em;
   }
 
-  .cal__axis {
-    width: 18px;
+  .gh__weekdays {
+    grid-area: days;
+    display: grid;
+    grid-template-rows: repeat(7, var(--cell));
+    row-gap: var(--gap);
+    align-items: center;
+  }
+
+  .gh__grid {
+    grid-area: grid;
+    display: grid;
+    grid-template-rows: repeat(7, var(--cell));
+    grid-auto-flow: column;
+    grid-auto-columns: var(--cell);
+    gap: var(--gap);
+  }
+
+  .gh__foot {
+    grid-area: foot;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 8px;
+  }
+
+  .gh__legend {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    letter-spacing: 0.02em;
+  }
+
+  .gh__legend span:first-child {
     margin-right: 4px;
   }
-
-  .cal__tick {
-    height: var(--cell);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    font-variant-numeric: tabular-nums;
-    opacity: 0.8;
-  }
-
-  /* Three-letter months don't fit a 12px column: set them sideways. */
-  .cal__label {
-    height: 30px;
-  }
-
-  .cal__month .cal__label {
-    width: var(--cell);
-    align-items: center;
-    justify-content: flex-start;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
+  .gh__legend span:last-child {
+    margin-left: 4px;
   }
 
   /* ---------- cells ---------- */
 
   .cell {
     display: block;
-    flex: none;
     width: var(--cell);
     height: var(--cell);
     padding: 0;
@@ -394,6 +405,7 @@ const months = Array.from({ length: 12 }, (_, i) => {
     border: 0;
     border-radius: 2px;
     background: var(--cell-empty);
+    box-shadow: inset 0 0 0 1px var(--line);
     font: inherit;
     cursor: pointer;
     transition:
@@ -401,38 +413,48 @@ const months = Array.from({ length: 12 }, (_, i) => {
       filter 140ms var(--ease);
   }
 
-  .cell[data-level='1'] {
-    background: var(--green-1);
-  }
-  .cell[data-level='2'] {
-    background: var(--green-2);
-  }
-  .cell[data-level='3'] {
-    background: var(--green-3);
-  }
-  .cell[data-level='4'] {
-    background: var(--green-4);
-  }
+  .cell[data-level='1'] { background: var(--green-1); box-shadow: none; }
+  .cell[data-level='2'] { background: var(--green-2); box-shadow: none; }
+  .cell[data-level='3'] { background: var(--green-3); box-shadow: none; }
+  .cell[data-level='4'] { background: var(--green-4); box-shadow: none; }
 
   .cell--void {
     visibility: hidden;
   }
 
-  button.cell:hover {
-    transform: scale(1.2);
-    filter: brightness(1.08);
+  .cell--swatch {
+    cursor: default;
   }
 
+  @media (hover: hover) {
+    button.cell:hover {
+      transform: scale(1.25);
+      filter: brightness(1.15);
+    }
+  }
+
+  /* keyboard focus: cream ring */
   button.cell:focus-visible {
     outline: 2px solid var(--ink);
     outline-offset: 2px;
   }
 
+  /* searched day: accent ring that breathes */
   button.cell.is-target {
     position: relative;
+    z-index: 1;
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     animation: cell-pulse 2.4s var(--ease) infinite;
+  }
+
+  /* focused target: cream ring inside, accent ring outside — both readable */
+  button.cell.is-target:focus-visible {
+    outline-color: var(--ink);
+    animation: none;
+    box-shadow:
+      0 0 0 4px var(--bg-raised),
+      0 0 0 6px var(--accent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -444,87 +466,18 @@ const months = Array.from({ length: 12 }, (_, i) => {
     }
   }
 
-  /* ---------- legend ---------- */
-
-  .cal__legend {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 12px 22px 14px;
-    border-top: 1px dashed var(--hairline);
-    font-size: 0.6875rem;
-    letter-spacing: 0.04em;
-    color: var(--ink-soft);
-  }
-
-  .cal__swatches {
-    display: inline-flex;
-    gap: var(--cell-gap);
-  }
-
-  .cell--swatch {
-    cursor: default;
-  }
-
-  /* ---------- mobile: months are rows, days run across ---------- */
-
   @media (max-width: 639.98px) {
     .cal {
-      --cell: 9px;
-      --label: 30px;
-    }
-
-    .cal__grid {
-      flex-direction: column;
-    }
-
-    .cal__month,
-    .cal__axis {
-      flex-direction: row;
-      align-items: center;
-    }
-
-    .cal__axis {
-      width: auto;
-      height: 14px;
-      margin: 0 0 2px;
-    }
-
-    .cal__tick {
-      width: var(--cell);
-      height: auto;
-      justify-content: center;
-      overflow: visible;
-    }
-
-    .cal__label,
-    .cal__month .cal__label {
-      width: var(--label);
-      height: auto;
-      writing-mode: horizontal-tb;
-      transform: none;
-      /* month names stay put while the days scroll underneath */
-      position: sticky;
-      left: 0;
-      z-index: 1;
-      align-self: stretch;
-      background: var(--paper);
-      box-shadow:
-        -16px 0 0 var(--paper),
-        4px 0 4px var(--paper);
-      flex: none;
-      justify-content: flex-start;
-      align-items: center;
+      --cell: 10px;
+      --day-col: 26px;
     }
 
     .cal__scroll {
-      padding: 16px 16px 12px;
+      padding: 20px 18px 16px;
     }
 
-    .cal__legend {
-      justify-content: flex-start;
-      padding-inline: 16px;
+    .gh {
+      margin-inline: 0;
     }
   }
 
@@ -540,12 +493,10 @@ const months = Array.from({ length: 12 }, (_, i) => {
     font-family: var(--mono);
     font-size: 0.75rem;
     line-height: 1.45;
-    color: var(--paper);
+    color: var(--bg);
     background: var(--ink);
     border-radius: 6px;
-    box-shadow:
-      0 1px 0 rgba(0, 0, 0, 0.08),
-      0 8px 24px -8px rgba(43, 33, 24, 0.45);
+    box-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.9);
     pointer-events: none;
   }
 
@@ -558,12 +509,12 @@ const months = Array.from({ length: 12 }, (_, i) => {
     justify-content: space-between;
     gap: 16px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
   }
 
   .cal-tip__count {
     font-weight: 400;
-    color: var(--green-1);
+    color: var(--green-2);
     white-space: nowrap;
   }
 
@@ -571,7 +522,7 @@ const months = Array.from({ length: 12 }, (_, i) => {
     margin: 6px 0 0;
     padding: 6px 0 0;
     list-style: none;
-    border-top: 1px dashed rgba(243, 236, 223, 0.25);
+    border-top: 1px solid rgba(15, 13, 11, 0.14);
     overflow-wrap: anywhere;
   }
 
@@ -582,6 +533,6 @@ const months = Array.from({ length: 12 }, (_, i) => {
 
   .cal-tip__hint {
     margin-top: 4px;
-    color: rgba(243, 236, 223, 0.66);
+    color: rgba(15, 13, 11, 0.62);
   }
 </style>

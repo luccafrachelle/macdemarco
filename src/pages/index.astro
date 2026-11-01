@@ -17,12 +17,13 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
   <main class="container page">
     <header class="hero">
       <p class="eyebrow hero__eyebrow">
-        <span class="hero__dot" aria-hidden="true"></span>
-        Lado A · One Wayne G
+        <span class="hero__rec" aria-hidden="true"></span>
+        mac demarco · demos con fecha
       </p>
-      <h1 class="display">¿Mac te escribió una canción para <em>tu&nbsp;cumple</em>?</h1>
+      <h1 class="display">¿Hay una canción de Mac para <em>tu&nbsp;cumple</em>?</h1>
       <p class="lede hero__lede">
-        Los títulos de <i>One Wayne G</i> son fechas. Fijate si hay una con la tuya.
+        Mac le puso de nombre la fecha a un montón de demos: <i>One Wayne G</i> y los discos que vinieron
+        después. Elegí tu día y fijate.
       </p>
     </header>
 
@@ -38,8 +39,13 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
   </main>
 
   <footer class="container site-footer">
-    <p>{covered} de 366 días tienen canción · proyecto fan no oficial</p>
-    <p>datos: MusicBrainz · links: Spotify</p>
+    <p>
+      <span>{covered} de 366 días tienen canción</span>
+      <span class="site-footer__sep" aria-hidden="true">·</span>
+      <span>datos de MusicBrainz y ListenBrainz</span>
+      <span class="site-footer__sep" aria-hidden="true">·</span>
+      <span>lo hizo un fan, no es oficial</span>
+    </p>
   </footer>
 
   <script type="application/json" id="db" set:html={dbJson} />
@@ -52,13 +58,13 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
   .page {
     display: grid;
     gap: 40px;
-    padding-top: clamp(40px, 9vw, 96px);
-    padding-bottom: 56px;
+    padding-top: clamp(48px, 10vw, 112px);
+    padding-bottom: 64px;
   }
 
   @media (min-width: 720px) {
     .page {
-      gap: 56px;
+      gap: 64px;
     }
   }
 
@@ -74,16 +80,17 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
     gap: 10px;
   }
 
-  .hero__dot {
-    width: 8px;
-    height: 8px;
+  /* little REC light */
+  .hero__rec {
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 0 3px rgba(200, 85, 61, 0.18);
+    box-shadow: 0 0 0 3px var(--accent-glow);
   }
 
   .hero__lede {
-    max-width: 46ch;
+    max-width: 52ch;
   }
 
   .hero__lede i {
@@ -96,15 +103,30 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
   }
 
   .site-footer {
-    padding-top: 20px;
     padding-bottom: 40px;
   }
 
   .site-footer p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
     padding-top: 20px;
-    border-top: 1px dashed var(--hairline);
+    border-top: 1px solid var(--line);
     font-size: 0.75rem;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     color: var(--ink-soft);
+  }
+
+  .site-footer__sep {
+    opacity: 0.45;
+  }
+
+  @media (max-width: 639.98px) {
+    .site-footer p {
+      flex-direction: column;
+    }
+    .site-footer__sep {
+      display: none;
+    }
   }
 </style>

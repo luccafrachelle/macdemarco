@@ -83,3 +83,30 @@ def test_songs_sorted_by_md_then_date():
 def test_generated_at_format():
     import re
     assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", build([], {})["generated_at"])
+
+
+def test_listenbrainz_id_used_when_embed_has_none():
+    t = "20230102"
+    s = build([rel("One Wayne G", "2023", url("alb1"), [t])], {"alb1": []},
+              {f"One Wayne G|{t}": A})["songs"][0]
+    assert s["exact_link"] is True and s["spotify"].endswith(A)
+
+
+def test_embed_id_wins_over_listenbrainz():
+    t = "20230102"
+    spotify = {"alb1": [{"title": t, "track_id": B}]}
+    s = build([rel("One Wayne G", "2023", url("alb1"), [t])], spotify,
+              {f"One Wayne G|{t}": A})["songs"][0]
+    assert s["spotify"].endswith(B)
+
+
+def test_listenbrainz_match_counts_for_ranking():
+    t = "20230102"
+    releases = [rel("Early", "2020", None, [t]), rel("Late", "2024", None, [t])]
+    s = build(releases, {}, {f"Late|{t}": A})["songs"][0]
+    assert s["album"] == "Late" and s["exact_link"] is True
+
+
+def test_fallback_url_fully_quoted():
+    s = build([rel("X", "2023", None, ["20200101 A/B"])], {})["songs"][0]
+    assert s["spotify"] == "https://open.spotify.com/search/20200101%20A%2FB%20mac%20demarco"

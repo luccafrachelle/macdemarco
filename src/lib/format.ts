@@ -36,26 +36,30 @@ export function spokenDate(md: string): string {
   return `${day} de ${monthName(month)}`;
 }
 
+/** Two dates as spoken: "el 2 y el 8 de agosto" / "el 30 de julio y el 3 de agosto" */
+export function datePair(a: string, b: string): string {
+  const [ma, da] = a.split('-').map(Number);
+  const [mb] = b.split('-').map(Number);
+  if (ma === mb) return `el ${da} y el ${spokenDate(b)}`;
+  return `el ${spokenDate(a)} y el ${spokenDate(b)}`;
+}
+
 export function resultSentence(result: Result): string {
   const when = spokenDate(result.md);
-  if (result.kind === 'exact') return `El ${when} tiene canción.`;
+  if (result.kind === 'exact') {
+    const n = result.songs.length;
+    return n > 1 ? `El ${when} tiene ${n} canciones.` : `El ${when} tiene canción.`;
+  }
 
   const { before, after } = result;
   if (before && after) {
-    const days = formatDays(before.distance);
-    if (before.songs.length + after.songs.length > 2) {
-      return `No hay canción para el ${when}, pero hay canciones a ${days}: antes y después.`;
-    }
-    return `No hay canción para el ${when}, pero hay dos a ${days}: una antes y una después.`;
+    return `Para el ${when} no hay. Las más cerca: ${datePair(before.md, after.md)}.`;
   }
   const match = before ?? after;
-  if (!match) return `No hay canción para el ${when}.`;
-  const side = before ? 'antes' : 'después';
-  const days = formatDays(match.distance);
-  if (match.songs.length > 1) {
-    return `No hay canción para el ${when}, pero las más cercanas son ${days} ${side}.`;
-  }
-  return `No hay canción para el ${when}, pero la más cercana es ${days} ${side}.`;
+  if (!match) return `Para el ${when} no hay.`;
+  const other = spokenDate(match.md);
+  const n = match.songs.length;
+  return n > 1 ? `Para el ${when} no hay, pero el ${other} hay ${n}.` : `Para el ${when} no hay, pero el ${other} sí.`;
 }
 
 export function countCoveredDays(db: DB): number {
