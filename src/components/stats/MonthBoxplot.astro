@@ -18,7 +18,7 @@ const { boxes, songs } = Astro.props;
 
 const W = 400;
 const H = 236;
-const M = { top: 28, right: 4, bottom: 24, left: 26 };
+const M = { top: 40, right: 4, bottom: 24, left: 26 };
 const plotW = W - M.left - M.right;
 const plotH = H - M.top - M.bottom;
 const base = M.top + plotH;
@@ -59,6 +59,7 @@ const marks = boxes.map((b, i) => {
     ))
   }
   <line class="ch-base" x1={M.left} x2={W - M.right} y1={base} y2={base} />
+  <text class="ch-axis" x={M.left - 6} y={M.top - 18} text-anchor="end">total</text>
 
   {
     marks.map((m) => (
@@ -70,7 +71,7 @@ const marks = boxes.map((b, i) => {
         data-tip-head={m.tipHead}
         data-tip={m.tip}
       >
-        <rect class="mark__hit" x={m.x0} y={M.top - 20} width={band} height={plotH + 20} />
+        <rect class="mark__hit" x={m.x0} y={M.top - 30} width={band} height={plotH + 30} />
         <g class:list={['mark__shape', { 'is-dim': !m.isMax }]}>
           <line class="whisker" x1={m.cx} x2={m.cx} y1={y(m.box.min)} y2={y(m.box.max)} />
           <line class="whisker" x1={m.cx - 5} x2={m.cx + 5} y1={y(m.box.max)} y2={y(m.box.max)} />
@@ -80,7 +81,7 @@ const marks = boxes.map((b, i) => {
         <text
           class:list={['ch-val', { 'ch-val--max': m.isMax }]}
           x={m.cx}
-          y={y(m.box.max) - 7}
+          y={M.top - 18}
           text-anchor="middle"
         >
           {m.total}
@@ -95,7 +96,7 @@ const marks = boxes.map((b, i) => {
 
 <p class="ch-note">
   Cada caja junta los {years.length} años con canciones: la mitad de los años cae adentro, la raya es la mediana y la línea
-  va del año más flojo al más cargado. El número de arriba es el total del mes.
+  va del año más flojo al más cargado. Arriba, el total del mes.
 </p>
 
 <details class="ch-data">
@@ -130,13 +131,16 @@ const marks = boxes.map((b, i) => {
 </details>
 
 <style>
+  /* the shared .mark__shape hover rule zeroes stroke-opacity; these lines are data, keep them visible */
   .whisker {
+    stroke-opacity: 1;
     stroke: var(--c-single);
     stroke-width: 1.5px;
     vector-effect: non-scaling-stroke;
   }
 
   .median {
+    stroke-opacity: 1;
     stroke: var(--bg);
     stroke-width: 2px;
     vector-effect: non-scaling-stroke;
