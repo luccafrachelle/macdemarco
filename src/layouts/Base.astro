@@ -6,7 +6,7 @@ interface Props {
 }
 
 // No description on purpose: link previews show only the title and the cover.
-const { title = 'Mac en tu cumple' } = Astro.props;
+const { title = '¿Hay alguna canción de Mac DeMarco en tu cumple?' } = Astro.props;
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const canonical = Astro.site ? new URL(base, Astro.site).href : undefined;
