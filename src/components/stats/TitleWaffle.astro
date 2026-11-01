@@ -1,0 +1,218 @@
+---
+/*
+ * Chart 4: one square per song, like the home calendar. Date-only titles
+ * first, then titles with something after the date, each chronological.
+ */
+import { formatFullDate } from '../../lib/format';
+import { creativeTitles, percentSplit, spokenFullDate, titleKinds } from '../../lib/stats';
+import type { Song } from '../../lib/types';
+
+interface Props {
+  songs: Song[];
+}
+
+const { songs } = Astro.props;
+
+const LABELS = ['solo fecha', 'con algo más'] as const;
+const COLS = 20;
+const CELL = 14;
+const PITCH = 16; // 2px gap
+
+const kinds = titleKinds(songs);
+const [pctA, pctB] = percentSplit(kinds.dateOnly, kinds.withSuffix);
+const byDate = (a: { date: string; title: string }, b: { date: string; title: string }): number =>
+  a.date.localeCompare(b.date) || a.title.localeCompare(b.title);
+const ordered = [
+  ...kinds.items.filter((i) => i.dateOnly).sort(byDate),
+  ...kinds.items.filter((i) => !i.dateOnly).sort(byDate),
+];
+const rows = Math.ceil(ordered.length / COLS);
+const W = COLS * PITCH - 2;
+const H = rows * PITCH - 2;
+const cells = ordered.map((item, i) => ({
+  ...item,
+  x: (i % COLS) * PITCH,
+  y: Math.floor(i / COLS) * PITCH,
+  when: spokenFullDate(item.date),
+}));
+const creative = creativeTitles(songs, 3);
+---
+
+<ul class="ch-legend">
+  <li><span class="ch-swatch ch-swatch--a"></span>{LABELS[0]}</li>
+  <li><span class="ch-swatch ch-swatch--b"></span>{LABELS[1]}</li>
+</ul>
+
+<div class="waffle">
+  <svg
+    class="ch-svg waffle__grid"
+    viewBox={`-1 -1 ${W + 2} ${H + 2}`}
+    role="group"
+    aria-label={`${ordered.length} canciones, un cuadrado por canción. Usá las flechas para recorrerlas.`}
+    data-roving
+    data-cols={COLS}
+  >
+    {
+      cells.map((c, i) => (
+        <g
+          class="mark"
+          tabindex={i === 0 ? '0' : '-1'}
+          role="img"
+          aria-label={`${c.title}, ${c.when}`}
+          data-tip-head={c.title}
+          data-tip={c.when}
+          data-kind={c.dateOnly ? 'fecha' : 'algo'}
+        >
+          <rect class="mark__hit" x={c.x - 1} y={c.y - 1} width={PITCH} height={PITCH} />
+          <rect
+            class:list={['mark__shape', c.dateOnly ? 'ch-fill--a' : 'ch-fill--b']}
+            x={c.x}
+            y={c.y}
+            width={CELL}
+            height={CELL}
+            rx="2"
+          />
+        </g>
+      ))
+    }
+  </svg>
+
+  <div class="waffle__side">
+    <p class="split">
+      <span class="split__pct"><span class="ch-swatch ch-swatch--a"></span>{pctA}%</span>
+      <span class="split__label">{LABELS[0]} · {kinds.dateOnly} canciones</span>
+    </p>
+    <p class="split">
+      <span class="split__pct"><span class="ch-swatch ch-swatch--b"></span>{pctB}%</span>
+      <span class="split__label">{LABELS[1]} · {kinds.withSuffix} canciones</span>
+    </p>
+    <div class="creative">
+      <p class="creative__head">Los que más le agregan</p>
+      <ol class="creative__list">
+        {
+          creative.map((c) => (
+            <li>
+              <span class="creative__title">{c.suffix}</span>
+              <span class="creative__date">{formatFullDate(c.date)}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</div>
+
+<details class="ch-data">
+  <summary>Ver datos</summary>
+  <div class="ch-table-wrap">
+<table class="ch-table">
+  <caption>
+    Un título es “solo fecha” si son 8 dígitos y nada más. Abajo, los {kinds.withSuffix} que tienen algo después de la
+    fecha.
+  </caption>
+  <thead><tr><th scope="col">Tipo</th><th scope="col">Canciones</th><th scope="col">%</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">{LABELS[0]}</th><td>{kinds.dateOnly}</td><td>{pctA}</td></tr>
+    <tr><th scope="row">{LABELS[1]}</th><td>{kinds.withSuffix}</td><td>{pctB}</td></tr>
+    {
+      cells
+        .filter((c) => !c.dateOnly)
+        .map((c) => (
+          <tr>
+            <td>{c.title}</td>
+            <td colspan="2">{formatFullDate(c.date)}</td>
+          </tr>
+        ))
+    }
+  </tbody>
+</table>
+  </div>
+</details>
+
+<style>
+  .waffle {
+    display: grid;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .waffle__grid {
+    max-width: 340px;
+  }
+
+  @media (min-width: 640px) {
+    .waffle {
+      grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+      gap: 32px;
+    }
+  }
+
+  .waffle__side {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+  }
+
+  .split {
+    display: grid;
+    gap: 2px;
+  }
+
+  .split__pct {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .split__label {
+    font-family: var(--round);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--ink-soft);
+  }
+
+  .creative {
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  .creative__head {
+    font-family: var(--round);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+
+  .creative__list {
+    display: grid;
+    gap: 2px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .creative__list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 10px;
+    align-items: baseline;
+    font-size: 0.8125rem;
+  }
+
+  .creative__title {
+    font-family: var(--round);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .creative__date {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--ink-soft);
+  }
+</style>

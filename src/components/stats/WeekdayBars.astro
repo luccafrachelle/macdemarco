@@ -1,0 +1,87 @@
+---
+/* Chart 2: songs by the real weekday of their full date, Monday → Sunday. */
+import { barPath, niceTicks } from '../../lib/chart';
+import { WEEKDAYS, WEEKDAYS_PLURAL } from '../../lib/stats';
+
+interface Props {
+  counts: number[];
+}
+
+const { counts } = Astro.props;
+
+const W = 400;
+const H = 210;
+const M = { top: 26, right: 4, bottom: 24, left: 26 };
+const plotW = W - M.left - M.right;
+const plotH = H - M.top - M.bottom;
+const base = M.top + plotH;
+const band = plotW / 7;
+const barW = Math.round(band * 0.62);
+
+const scale = niceTicks(Math.max(...counts));
+const y = (v: number): number => base - (v / scale.max) * plotH;
+const peak = Math.max(...counts);
+
+const bars = counts.map((n, i) => {
+  const x0 = M.left + band * i;
+  const x = x0 + (band - barW) / 2;
+  return {
+    n,
+    x0,
+    cx: x0 + band / 2,
+    d: barPath(x, y(n), barW, base - y(n), 4),
+    isMax: n === peak,
+    label: WEEKDAYS[i],
+    tipHead: WEEKDAYS_PLURAL[i],
+    tip: `${n} ${n === 1 ? 'canción' : 'canciones'}`,
+  };
+});
+---
+
+<svg class="ch-svg" viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Canciones por día de la semana">
+  {
+    scale.ticks.map((t) => (
+      <g>
+        {t > 0 && <line class="ch-grid" x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} />}
+        <text class="ch-axis" x={M.left - 6} y={y(t)} dy="0.35em" text-anchor="end">
+          {t}
+        </text>
+      </g>
+    ))
+  }
+  {
+    bars.map((b) => (
+      <g class="mark" tabindex="0" role="img" aria-label={`${b.tipHead}: ${b.tip}`} data-tip-head={b.tipHead} data-tip={b.tip}>
+        <rect class="mark__hit" x={b.x0} y={M.top - 20} width={band} height={plotH + 20} />
+        {b.d && <path class:list={['mark__shape ch-fill', { 'is-dim': !b.isMax }]} d={b.d} />}
+        <text class:list={['ch-val', { 'ch-val--max': b.isMax }]} x={b.cx} y={y(b.n) - 7} text-anchor="middle">
+          {b.n}
+        </text>
+        <text class="ch-axis" x={b.cx} y={H - 6} text-anchor="middle">
+          {b.label}
+        </text>
+      </g>
+    ))
+  }
+  <line class="ch-base" x1={M.left} x2={W - M.right} y1={base} y2={base} />
+</svg>
+
+<details class="ch-data">
+  <summary>Ver datos</summary>
+  <div class="ch-table-wrap">
+<table class="ch-table">
+  <caption>Día de la semana de la fecha completa de cada canción.</caption>
+  <thead><tr><th scope="col">Día</th><th scope="col">Canciones</th></tr></thead>
+  <tbody>
+    {
+      bars.map((b) => (
+        <tr>
+          <th scope="row">{b.tipHead}</th>
+          <td>{b.n}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+  </div>
+</details>

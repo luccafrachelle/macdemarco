@@ -1,0 +1,256 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import TabNav from '../components/TabNav.astro';
+import ChartCard from '../components/stats/ChartCard.astro';
+import ChartTip from '../components/stats/ChartTip.astro';
+import MonthBoxplot from '../components/stats/MonthBoxplot.astro';
+import TitleWaffle from '../components/stats/TitleWaffle.astro';
+import WeekdayBars from '../components/stats/WeekdayBars.astro';
+import YearBars from '../components/stats/YearBars.astro';
+import db from '../data/songs.json';
+import { monthName, spokenDate } from '../lib/format';
+import {
+  averageGap,
+  busiestCalendarDay,
+  busiestDate,
+  busiestMonth,
+  coveredCalendarDays,
+  dateRange,
+  fmtNum,
+  leapDaySongs,
+  longestGap,
+  longestStreak,
+  longestTitle,
+  monthBoxes,
+  monthTakeaway,
+  recordingYears,
+  repeatedDays,
+  spokenFullDate,
+  titleKinds,
+  titleSuffix,
+  titleTakeaway,
+  weekdayCounts,
+  weekdayTakeaway,
+  yearBars,
+  yearTakeaway,
+} from '../lib/stats';
+import type { DB } from '../lib/types';
+import '../styles/charts.css';
+
+const songs = (db as DB).songs;
+
+const years = recordingYears(songs);
+const boxes = monthBoxes(songs);
+const weekdays = weekdayCounts(songs);
+const perYear = yearBars(songs);
+const kinds = titleKinds(songs);
+const newAlbums = [...new Set(songs.map((s) => s.album))].filter((a) => a !== 'One Wayne G');
+
+const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+
+const streak = longestStreak(songs);
+const topDate = busiestDate(songs);
+const topDay = busiestCalendarDay(songs);
+const repeated = repeatedDays(songs);
+const gap = longestGap(songs);
+const avg = averageGap(songs);
+const topMonth = busiestMonth(songs);
+const longest = longestTitle(songs);
+const covered = coveredCalendarDays(songs);
+const leap = leapDaySongs(songs);
+
+const tiles = [
+  {
+    label: 'La racha más larga',
+    value: plural(streak.days, 'día', 'días'),
+    note: `seguidos grabando, ${dateRange(streak.from, streak.to)}.`,
+  },
+  {
+    label: 'Lo máximo en un día',
+    value: plural(topDate.count, 'canción', 'canciones'),
+    note: `el ${spokenFullDate(topDate.date)}. Sin mirar el año, gana el ${spokenDate(topDay.md)} con ${topDay.count}.`,
+  },
+  {
+    label: 'Días repetidos',
+    value: `${repeated.fullDates}`,
+    note: `fechas tienen más de una canción, y ${repeated.calendarDaysAcrossYears} días del calendario se repiten en años distintos.`,
+  },
+  {
+    label: 'La pausa más larga',
+    value: plural(gap.days, 'día', 'días'),
+    note: `sin fechar nada, ${dateRange(gap.from, gap.to)}.`,
+  },
+  {
+    label: 'Cada cuánto',
+    value: `${fmtNum(avg)} días`,
+    note: 'es la espera promedio entre una fecha con canción y la siguiente.',
+  },
+  {
+    label: 'El mes más intenso',
+    value: plural(topMonth.count, 'canción', 'canciones'),
+    note: `en ${monthName(topMonth.month)} de ${topMonth.year}.`,
+  },
+  {
+    label: 'El título más largo',
+    value: titleSuffix(longest.title) || longest.title,
+    note: `del ${spokenFullDate(longest.date)}.`,
+    text: true,
+  },
+  {
+    label: 'Días del año',
+    value: `${covered} de 366`,
+    note: `tienen al menos una canción. ${leap === 1 ? 'Una cae' : `${leap} caen`} un 29 de febrero.`,
+  },
+];
+
+const from = years[0];
+const to = years[years.length - 1];
+---
+
+<Base title="Estadísticas · ¿Hay alguna canción de Mac DeMarco en tu cumple?">
+  <TabNav current="estadisticas" />
+  <main class="container page">
+    <header class="hero">
+      <h1 class="display">Las canciones en números</h1>
+      <p class="lede hero__lede">
+        Mac grabó y fechó estas canciones entre {from} y {to}. Algunas cosas que salen de mirarlas juntas.
+      </p>
+    </header>
+
+    <ChartCard id="mes" title="¿En qué mes graba más?" takeaway={monthTakeaway(boxes)}>
+      <MonthBoxplot boxes={boxes} songs={songs} />
+    </ChartCard>
+
+    <ChartCard id="semana" title="¿Qué día de la semana?" takeaway={weekdayTakeaway(weekdays)}>
+      <WeekdayBars counts={weekdays} />
+    </ChartCard>
+
+    <ChartCard id="anio" title="Año por año" takeaway={yearTakeaway(perYear)}>
+      <YearBars bars={perYear} newAlbums={newAlbums} />
+    </ChartCard>
+
+    <ChartCard id="titulos" title="¿Título o solo fecha?" takeaway={titleTakeaway(kinds.dateOnly, kinds.withSuffix)}>
+      <TitleWaffle songs={songs} />
+    </ChartCard>
+
+    <section class="facts" aria-labelledby="facts-title">
+      <h2 id="facts-title" class="facts__title">Datos sueltos</h2>
+      <ul class="tiles">
+        {
+          tiles.map((t) => (
+            <li class="tile">
+              <p class="tile__label">{t.label}</p>
+              <p class:list={['tile__value', { 'tile__value--text': t.text }]}>{t.value}</p>
+              <p class="tile__note">{t.note}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </main>
+
+  <SiteFooter />
+  <ChartTip />
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: 56px;
+    max-width: 760px;
+    padding-top: clamp(32px, 7vw, 72px);
+    padding-bottom: 72px;
+  }
+
+  @media (min-width: 720px) {
+    .page {
+      gap: 80px;
+    }
+  }
+
+  .hero {
+    display: grid;
+    gap: 20px;
+  }
+
+  .hero .display {
+    font-size: clamp(2.5rem, 6.4vw, 4rem);
+  }
+
+  .hero__lede {
+    max-width: 46ch;
+  }
+
+  .facts {
+    display: grid;
+    gap: 18px;
+  }
+
+  .facts__title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(1.875rem, 4.4vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 720px) {
+    .tiles {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+  }
+
+  .tile {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    min-width: 0;
+    padding: 14px 14px 16px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .tile__label {
+    font-family: var(--round);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .tile__value {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.75rem;
+    line-height: 1.05;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .tile__value--text {
+    font-style: italic;
+    font-size: 1.25rem;
+    line-height: 1.15;
+  }
+
+  .tile__note {
+    font-family: var(--round);
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+  }
+</style>
