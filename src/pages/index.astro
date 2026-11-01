@@ -10,24 +10,12 @@ import type { DB } from '../lib/types';
 const data = db as DB;
 const covered = countCoveredDays(data);
 // Escape "<" so a title can never close the <script> element.
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <Base>
   <main class="container page">
     <header class="hero">
-      <div class="masthead">
-        <img
-          class="masthead__cover"
-          src={`${base}one-wayne-g.jpg`}
-          width="64"
-          height="64"
-          alt="Portada de One Wayne G"
-          decoding="async"
-        />
-        <span class="eyebrow masthead__name">Mac en tu cumple</span>
-      </div>
       <h1 class="display">
         ¿Hay alguna canción de Mac DeMarco en <em class="hero__mark"
           >tu&nbsp;cumple<svg
@@ -92,32 +80,6 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
     max-width: min(100%, 820px);
   }
 
-  .masthead {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: clamp(8px, 3vw, 28px);
-  }
-
-  .masthead__cover {
-    display: block;
-    flex: none;
-    width: 56px;
-    height: 56px;
-    border-radius: 4px;
-    background: var(--blue);
-  }
-
-  @media (min-width: 720px) {
-    .masthead__cover {
-      width: 64px;
-      height: 64px;
-    }
-  }
-
-  .masthead__name {
-    color: var(--yellow);
-  }
 
   /* "tu cumple": yellow italic with one thin hand-drawn stroke under it */
   .hero__mark {

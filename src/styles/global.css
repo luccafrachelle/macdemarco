@@ -1,21 +1,22 @@
 :root {
-  /* black base, blue + mustard from the One Wayne G cover */
-  --bg: #07060f;
-  --bg-raised: #0e0c1f;
-  --line: #1c1a3a;
-  --ink: #ece6c8;
-  --ink-soft: #9e9a86;
+  /* black base; blue + mustard from the One Wayne G cover */
+  --bg: #08071a;
+  --bg-raised: #0c0b29;
+  --line: #1f1c52;
+  --ink: #efe9d0;
+  --ink-soft: #a3a08c;
 
-  --blue: #080472;
-  --blue-bright: #3c37d0;
-  --yellow: #d9cc45;
+  --blue: #0c0a4f;
+  --blue-bright: #4b46d4;
+  --yellow: #dccf4f;
+  --yellow-soft: #ebe07a;
 
-  /* calendar levels: blue → yellow */
-  --cell-empty: #13112e;
-  --lv-1: #1f1b9a;
-  --lv-2: #3c37d0;
-  --lv-3: #a59c2c;
-  --lv-4: #e8dc5a;
+  /* calendar: navy empty days, mustard by how many songs (like the drawing on the cover) */
+  --cell-empty: #15134a;
+  --lv-1: #7d7634;
+  --lv-2: #a39a37;
+  --lv-3: #cbbf41;
+  --lv-4: #f2e66b;
   --target: #ffffff;
 
   --serif: 'Cormorant Garamond', 'Cormorant', Garamond, 'Iowan Old Style', Georgia, serif;
@@ -67,7 +68,7 @@ body::after {
 
 ::selection {
   background: var(--yellow);
-  color: var(--blue);
+  color: var(--bg);
 }
 
 :focus-visible {

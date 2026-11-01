@@ -88,16 +88,16 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   }
 
   select:hover {
-    border-color: var(--blue-bright);
+    border-color: #3a36a0;
   }
 
   select:focus-visible {
     outline: 2px solid var(--yellow);
     outline-offset: 2px;
-    border-color: var(--blue-bright);
+    border-color: #3a36a0;
   }
 
-  /* flat cover-blue button */
+  /* mustard button, like the ink on the cover */
   .search-btn {
     grid-column: 1 / -1;
     height: 56px;
@@ -106,9 +106,9 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: 0.02em;
-    color: var(--ink);
-    background: var(--blue);
-    border: 1px solid var(--blue-bright);
+    color: var(--bg);
+    background: var(--yellow);
+    border: 1px solid var(--yellow);
     border-radius: 8px;
     cursor: pointer;
     transition:
@@ -126,13 +126,14 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   .search-btn span {
     display: inline-block;
     margin-left: 6px;
-    color: var(--yellow);
+    color: inherit;
     transition: transform 160ms var(--ease);
   }
 
   @media (hover: hover) {
     .search-btn:hover {
-      background: var(--blue-bright);
+      background: var(--yellow-soft);
+      border-color: var(--yellow-soft);
     }
     .search-btn:hover span {
       transform: translateX(3px);
