@@ -10,21 +10,40 @@ import type { DB } from '../lib/types';
 const data = db as DB;
 const covered = countCoveredDays(data);
 // Escape "<" so a title can never close the <script> element.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <Base>
   <main class="container page">
     <header class="hero">
-      <p class="eyebrow hero__eyebrow">
-        <span class="hero__rec" aria-hidden="true"></span>
-        mac demarco · demos con fecha
-      </p>
-      <h1 class="display">¿Hay una canción de Mac para <em>tu&nbsp;cumple</em>?</h1>
-      <p class="lede hero__lede">
-        Mac le puso de nombre la fecha a un montón de demos: <i>One Wayne G</i> y los discos que vinieron
-        después. Elegí tu día y fijate.
-      </p>
+      <div class="masthead">
+        <img
+          class="masthead__cover"
+          src={`${base}one-wayne-g.jpg`}
+          width="64"
+          height="64"
+          alt="Portada de One Wayne G"
+          decoding="async"
+        />
+        <span class="eyebrow masthead__name">Mac en tu cumple</span>
+      </div>
+      <h1 class="display">
+        ¿Hay alguna canción de Mac DeMarco en <em class="hero__mark"
+          >tu&nbsp;cumple<svg
+            class="hero__stroke"
+            viewBox="0 0 240 14"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            focusable="false"
+            ><path
+              pathLength="1"
+              d="M3 9.5c18-2.6 41-4.4 66-3.6 21 .7 33 2.9 55 2.4 30-.7 52-4.8 77-4.9 14 0 27 1.2 36 2.9"
+            /></svg
+          ></em
+        >?
+      </h1>
+      <p class="lede hero__lede">Poné la fecha de tu cumple y fijate si hay alguna canción ese día o cerca.</p>
     </header>
 
     <section class="search" aria-label="Buscar por fecha de cumpleaños">
@@ -39,13 +58,12 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
   </main>
 
   <footer class="container site-footer">
-    <p>
+    <p class="site-footer__data">
       <span>{covered} de 366 días tienen canción</span>
       <span class="site-footer__sep" aria-hidden="true">·</span>
       <span>datos de MusicBrainz y ListenBrainz</span>
-      <span class="site-footer__sep" aria-hidden="true">·</span>
-      <span>lo hizo un fan, no es oficial</span>
     </p>
+    <p class="site-footer__note">Esto es una sidequest, claramente no es oficial. Un saludo.</p>
   </footer>
 
   <script type="application/json" id="db" set:html={dbJson} />
@@ -57,45 +75,80 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
 <style>
   .page {
     display: grid;
-    gap: 40px;
-    padding-top: clamp(48px, 10vw, 112px);
-    padding-bottom: 64px;
+    gap: 48px;
+    padding-top: clamp(32px, 7vw, 72px);
+    padding-bottom: 72px;
   }
 
   @media (min-width: 720px) {
     .page {
-      gap: 64px;
+      gap: 72px;
     }
   }
 
   .hero {
     display: grid;
-    gap: 20px;
-    max-width: min(100%, 760px);
+    gap: 24px;
+    max-width: min(100%, 820px);
   }
 
-  .hero__eyebrow {
-    display: inline-flex;
+  .masthead {
+    display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
+    margin-bottom: clamp(8px, 3vw, 28px);
   }
 
-  /* little REC light */
-  .hero__rec {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+  .masthead__cover {
+    display: block;
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+    background: var(--blue);
+  }
+
+  @media (min-width: 720px) {
+    .masthead__cover {
+      width: 64px;
+      height: 64px;
+    }
+  }
+
+  .masthead__name {
+    color: var(--yellow);
+  }
+
+  /* "tu cumple": yellow italic with one thin hand-drawn stroke under it */
+  .hero__mark {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.06em;
+  }
+
+  .hero__stroke {
+    position: absolute;
+    left: -0.02em;
+    right: -0.06em;
+    bottom: -0.08em;
+    width: calc(100% + 0.08em);
+    height: 0.2em;
+    overflow: visible;
+  }
+
+  .hero__stroke path {
+    fill: none;
+    stroke: var(--yellow);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    animation: draw 1100ms 250ms var(--ease) both;
   }
 
   .hero__lede {
-    max-width: 52ch;
-  }
-
-  .hero__lede i {
-    font-style: normal;
-    color: var(--ink);
+    max-width: 46ch;
   }
 
   .result-section:has(> .result:empty) {
@@ -103,30 +156,26 @@ const dbJson = JSON.stringify(data).replace(/</g, '\\u003c');
   }
 
   .site-footer {
+    display: grid;
+    gap: 6px;
     padding-bottom: 40px;
   }
 
-  .site-footer p {
+  .site-footer__data {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 10px;
     padding-top: 20px;
     border-top: 1px solid var(--line);
+  }
+
+  .site-footer p {
     font-size: 0.75rem;
     letter-spacing: 0.01em;
     color: var(--ink-soft);
   }
 
   .site-footer__sep {
-    opacity: 0.45;
-  }
-
-  @media (max-width: 639.98px) {
-    .site-footer p {
-      flex-direction: column;
-    }
-    .site-footer__sep {
-      display: none;
-    }
+    opacity: 0.5;
   }
 </style>

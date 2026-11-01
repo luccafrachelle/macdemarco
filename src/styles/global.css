@@ -1,23 +1,24 @@
 :root {
-  --bg: #0f0d0b;
-  --bg-raised: #17140f;
-  --line: #2a241d;
-  --ink: #efe6d4;
-  --ink-soft: #a89a85;
+  /* black base, blue + mustard from the One Wayne G cover */
+  --bg: #07060f;
+  --bg-raised: #0e0c1f;
+  --line: #1c1a3a;
+  --ink: #ece6c8;
+  --ink-soft: #9e9a86;
 
-  --cell-empty: #1b1813;
-  --green-1: #0e4429;
-  --green-2: #006d32;
-  --green-3: #26a641;
-  --green-4: #39d353;
+  --blue: #080472;
+  --blue-bright: #3c37d0;
+  --yellow: #d9cc45;
 
-  --accent: #e2603f;
-  --accent-glow: rgba(226, 96, 63, 0.22);
+  /* calendar levels: blue → yellow */
+  --cell-empty: #13112e;
+  --lv-1: #1f1b9a;
+  --lv-2: #3c37d0;
+  --lv-3: #a59c2c;
+  --lv-4: #e8dc5a;
+  --target: #ffffff;
 
-  /* derived */
-  --line-soft: rgba(239, 230, 212, 0.06);
-
-  --serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --serif: 'Cormorant Garamond', 'Cormorant', Garamond, 'Iowan Old Style', Georgia, serif;
   --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --gutter: 16px;
@@ -42,9 +43,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(226, 96, 63, 0.05), transparent 70%),
-    var(--bg);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 1rem;
@@ -61,18 +60,18 @@ body::after {
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.08;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.94 0 0 0 0 0.9 0 0 0 0 0.83 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.93 0 0 0 0 0.9 0 0 0 0 0.78 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 220px 220px;
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--yellow);
+  color: var(--blue);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--yellow);
   outline-offset: 3px;
 }
 
@@ -104,31 +103,33 @@ a {
 
 /* ---------- type scale ---------- */
 
+/* Spaced classical caps, like "Mac DeMarco" on the cover. */
 .eyebrow {
-  font-family: var(--mono);
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.12em;
+  font-family: var(--serif);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
   color: var(--ink-soft);
 }
 
 .display {
   font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(2.5rem, 7vw, 4.75rem);
-  line-height: 1.02;
-  letter-spacing: -0.015em;
+  font-weight: 500;
+  font-size: clamp(2.625rem, 7.4vw, 5rem);
+  line-height: 1.04;
+  letter-spacing: 0.01em;
   text-wrap: balance;
 }
 
 .display em {
   font-style: italic;
-  color: var(--accent);
+  color: var(--yellow);
 }
 
 .lede {
   font-family: var(--mono);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.75;
   color: var(--ink-soft);
   text-wrap: pretty;
@@ -146,23 +147,6 @@ a {
   border: 0;
 }
 
-/* Tiny side mark (A / B) — a cassette detail, no words. */
-.side-mark {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 20px;
-  height: 20px;
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0;
-  color: var(--ink-soft);
-  border: 1px solid var(--line);
-  border-radius: 50%;
-}
-
 /* ---------- motion ---------- */
 
 @keyframes rise {
@@ -176,14 +160,24 @@ a {
   }
 }
 
-/* Soft accent ring that breathes out from the searched calendar day. */
+/* Gentle white breath around the searched calendar day. */
 @keyframes cell-pulse {
   0% {
-    box-shadow: 0 0 0 2px rgba(226, 96, 63, 0.5);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
   }
   70%,
   100% {
-    box-shadow: 0 0 0 8px rgba(226, 96, 63, 0);
+    box-shadow: 0 0 0 7px rgba(255, 255, 255, 0);
+  }
+}
+
+/* Hand-drawn underline drawing itself in. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 

@@ -46,7 +46,7 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
   .field {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
   }
 
@@ -88,16 +88,16 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   }
 
   select:hover {
-    border-color: #3d352b;
+    border-color: var(--blue-bright);
   }
 
   select:focus-visible {
-    outline: 2px solid transparent;
+    outline: 2px solid var(--yellow);
     outline-offset: 2px;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+    border-color: var(--blue-bright);
   }
 
+  /* flat cover-blue button */
   .search-btn {
     grid-column: 1 / -1;
     height: 56px;
@@ -106,16 +106,15 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: 0.02em;
-    color: var(--bg);
-    background: var(--ink);
-    border: 0;
+    color: var(--ink);
+    background: var(--blue);
+    border: 1px solid var(--blue-bright);
     border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 3px 0 0 var(--accent);
     transition:
       transform 120ms var(--ease),
-      box-shadow 120ms var(--ease),
-      background-color 160ms var(--ease);
+      background-color 160ms var(--ease),
+      color 160ms var(--ease);
   }
 
   @media (min-width: 640px) {
@@ -127,12 +126,13 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   .search-btn span {
     display: inline-block;
     margin-left: 6px;
+    color: var(--yellow);
     transition: transform 160ms var(--ease);
   }
 
   @media (hover: hover) {
     .search-btn:hover {
-      background: #fff6e6;
+      background: var(--blue-bright);
     }
     .search-btn:hover span {
       transform: translateX(3px);
@@ -140,16 +140,11 @@ const days = Array.from({ length: 31 }, (_, i) => i + 1);
   }
 
   .search-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 0 0 0 var(--accent);
+    transform: translateY(1px);
   }
 
   .search-btn:focus-visible {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    box-shadow:
-      0 3px 0 0 var(--accent),
-      0 0 0 3px var(--bg),
-      0 0 0 5px var(--accent);
+    outline: 2px solid var(--yellow);
+    outline-offset: 3px;
   }
 </style>

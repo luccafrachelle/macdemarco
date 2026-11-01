@@ -1,5 +1,5 @@
 import { clampDay, daysInMonth, findSongs, parseHash, toMd } from '../lib/nearest';
-import { formatFullDate, resultSentence, spokenDate } from '../lib/format';
+import { formatFullDate, resultSentence, spokenDate, spotifyTrackId } from '../lib/format';
 import type { DB, Match, Result, Song } from '../lib/types';
 
 type SearchDetail = { month: number; day: number };
@@ -69,6 +69,21 @@ function search(month: number, day: number): void {
 
 /* ---------- rendering ---------- */
 
+function buildPlayer(trackId: string, title: string): HTMLElement {
+  const frame = document.createElement('div');
+  frame.className = 'card__frame';
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('src', `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`);
+  iframe.setAttribute('width', '100%');
+  iframe.setAttribute('height', '80');
+  iframe.setAttribute('frameborder', '0');
+  iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+  iframe.setAttribute('loading', 'lazy');
+  iframe.setAttribute('title', `${title} en Spotify`);
+  frame.append(iframe);
+  return frame;
+}
+
 function buildCard(song: Song, index: number): HTMLElement {
   const frag = cardTemplate.content.cloneNode(true) as DocumentFragment;
   const card = frag.querySelector<HTMLElement>('.card')!;
@@ -76,9 +91,15 @@ function buildCard(song: Song, index: number): HTMLElement {
   card.querySelector('.card__date')!.textContent = formatFullDate(song.date);
   card.querySelector('.card__title')!.textContent = song.title;
   card.querySelector('.card__album')!.textContent = song.album;
+
+  const player = card.querySelector<HTMLElement>('.card__player')!;
   const link = card.querySelector<HTMLAnchorElement>('.card__link')!;
+  const trackId = song.spotify ? spotifyTrackId(song.spotify) : null;
+  // Left empty when there is no track id: CSS then promotes the plain link.
+  if (trackId) player.append(buildPlayer(trackId, song.title));
+
   if (song.spotify) {
-    link.href = song.spotify;
+    link.setAttribute('href', song.spotify);
     link.querySelector('.card__link-title')!.textContent = `: ${song.title} (abre en una pestaña nueva)`;
   } else {
     link.remove();

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { countCoveredDays, datePair, formatDays, formatFullDate, monthName, resultSentence, spokenDate, MONTHS } from '../src/lib/format';
+import { countCoveredDays, datePair, formatDays, formatFullDate, monthName, resultSentence, spokenDate, spotifyTrackId, MONTHS } from '../src/lib/format';
 import type { DB, Match, Result, Song } from '../src/lib/types';
 
 const song = (md: string): Song => ({
@@ -129,5 +129,25 @@ describe('formatFullDate placeholder year', () => {
   });
   test('real year unchanged', () => {
     expect(formatFullDate('2019-08-05')).toBe('05.08.2019');
+  });
+});
+
+describe('spotifyTrackId', () => {
+  test('extracts the 22-char id from a track url', () => {
+    expect(spotifyTrackId('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC')).toBe('4uLU6hMCjMI75M1A2tKUQC');
+  });
+  test('ignores query strings and intl prefixes', () => {
+    expect(spotifyTrackId('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=abc')).toBe('4uLU6hMCjMI75M1A2tKUQC');
+    expect(spotifyTrackId('https://open.spotify.com/intl-es/track/4uLU6hMCjMI75M1A2tKUQC')).toBe(
+      '4uLU6hMCjMI75M1A2tKUQC',
+    );
+  });
+  test('returns null for anything that is not a track link', () => {
+    expect(spotifyTrackId('')).toBeNull();
+    expect(spotifyTrackId('https://open.spotify.com/search/mac%20demarco')).toBeNull();
+    expect(spotifyTrackId('https://open.spotify.com/album/4uLU6hMCjMI75M1A2tKUQC')).toBeNull();
+    expect(spotifyTrackId('https://open.spotify.com/track/short')).toBeNull();
+    expect(spotifyTrackId('https://evil.example/track/4uLU6hMCjMI75M1A2tKUQC')).toBeNull();
+    expect(spotifyTrackId('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"><x')).toBeNull();
   });
 });

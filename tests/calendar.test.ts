@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { cellLabel, countLabel, levelFor, monthAbbr, monthLabelColumns, weekGrid } from '../src/lib/calendar';
+import { cellLabel, countLabel, levelFor, monthAbbr, monthStrips } from '../src/lib/calendar';
 
 describe('levelFor', () => {
   test('0 songs → level 0', () => {
@@ -45,50 +45,35 @@ describe('monthAbbr', () => {
   });
 });
 
-describe('weekGrid', () => {
-  const grid = weekGrid(2024);
-  const real = grid.flat().filter((c): c is { md: string } => c !== null);
+describe('monthStrips', () => {
+  const strips = monthStrips();
+  const real = strips.flatMap((r) => r.days).filter((c): c is { md: string } => c !== null);
 
-  test('columns of 7 weekdays', () => {
-    expect(grid.length).toBe(53);
-    for (const col of grid) expect(col).toHaveLength(7);
+  test('12 rows, months 1..12 in order', () => {
+    expect(strips).toHaveLength(12);
+    expect(strips.map((r) => r.month)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
   });
-  test('2024-01-01 (a Monday) is col 0 row 0', () => {
-    expect(grid[0][0]).toEqual({ md: '01-01' });
+  test('each row has 31 slots', () => {
+    for (const row of strips) expect(row.days).toHaveLength(31);
   });
-  test('2024-12-31 is the last real cell', () => {
-    expect(real[real.length - 1]).toEqual({ md: '12-31' });
-    // Tuesday → row 1 of the last column, rest are placeholders
-    expect(grid[52][1]).toEqual({ md: '12-31' });
-    expect(grid[52].slice(2).every((c) => c === null)).toBe(true);
+  test('february has 29 real days (29 feb is real, 30-31 are null)', () => {
+    const feb = strips[1].days;
+    expect(feb.filter(Boolean)).toHaveLength(29);
+    expect(feb[28]).toEqual({ md: '02-29' });
+    expect(feb[29]).toBeNull();
+    expect(feb[30]).toBeNull();
   });
-  test('366 real cells, in order, including 02-29', () => {
+  test('366 real days in total, unique and in order', () => {
     expect(real).toHaveLength(366);
     expect(new Set(real.map((c) => c.md)).size).toBe(366);
-    expect(real.some((c) => c.md === '02-29')).toBe(true);
-    expect(real[59]).toEqual({ md: '02-29' });
+    expect(real[0]).toEqual({ md: '01-01' });
+    expect(real[365]).toEqual({ md: '12-31' });
   });
-  test('a year not starting on Monday gets leading placeholders', () => {
-    // 2025-01-01 is a Wednesday
-    const g = weekGrid(2025);
-    expect(g[0].slice(0, 2)).toEqual([null, null]);
-    expect(g[0][2]).toEqual({ md: '01-01' });
-    expect(g.flat().filter(Boolean)).toHaveLength(365);
+  test('slot 31 of abril is null, slot 30 is real', () => {
+    expect(strips[3].days[30]).toBeNull();
+    expect(strips[3].days[29]).toEqual({ md: '04-30' });
   });
-});
-
-describe('monthLabelColumns', () => {
-  const labels = monthLabelColumns(2024);
-  test('one label per month, in order', () => {
-    expect(labels.map((l) => l.month)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-  });
-  test('january at col 0, february at col 4', () => {
-    expect(labels[0]).toEqual({ month: 1, col: 0 });
-    // 2024-02-01 is a Thursday in the week starting Mon 29 Jan (day index 28)
-    expect(labels[1]).toEqual({ month: 2, col: 4 });
-  });
-  test('december label sits in the week containing 2024-12-01', () => {
-    // 2024-12-01 is a Sunday → last day of the week starting Mon 25 Nov (index 329 → col 47)
-    expect(labels[11]).toEqual({ month: 12, col: 47 });
+  test('months with 30 days end in null', () => {
+    for (const m of [4, 6, 9, 11]) expect(strips[m - 1].days[30]).toBeNull();
   });
 });

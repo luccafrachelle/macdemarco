@@ -23,46 +23,24 @@ export function monthAbbr(month: number): string {
   return monthName(month).slice(0, 3);
 }
 
-export type GridCell = { md: string } | null;
+export type StripDay = { md: string } | null;
+export type MonthStrip = { month: number; days: StripDay[] };
 
-const MS_PER_DAY = 86_400_000;
-
-function dayOffset(year: number): number {
-  // Monday-first weekday of Jan 1 (0 = Monday … 6 = Sunday)
-  return (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7;
-}
-
-function daysInYear(year: number): number {
-  return Math.round((Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / MS_PER_DAY);
-}
+/** Days per month in the reference leap year (29 feb is a real day). */
+const MONTH_LENGTHS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
 
 /**
- * GitHub contribution-graph layout: columns are weeks (Monday first),
- * each column holds 7 rows (Mon … Sun). Days outside the year are null.
+ * One strip per month: 12 rows × 31 slots. Slot i holds day i + 1, or null
+ * when that day does not exist in the month (so every row keeps the alignment).
  */
-export function weekGrid(year = 2024): GridCell[][] {
-  const offset = dayOffset(year);
-  const total = daysInYear(year);
-  const cols = Math.ceil((offset + total) / 7);
-  const start = Date.UTC(year, 0, 1);
-  return Array.from({ length: cols }, (_, c) =>
-    Array.from({ length: 7 }, (_, r): GridCell => {
-      const i = c * 7 + r - offset;
-      if (i < 0 || i >= total) return null;
-      const d = new Date(start + i * MS_PER_DAY);
-      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const dd = String(d.getUTCDate()).padStart(2, '0');
-      return { md: `${mm}-${dd}` };
-    }),
-  );
-}
-
-/** Column of the week that contains the 1st of each month. */
-export function monthLabelColumns(year = 2024): { month: number; col: number }[] {
-  const offset = dayOffset(year);
-  const start = Date.UTC(year, 0, 1);
-  return Array.from({ length: 12 }, (_, i) => {
-    const index = Math.round((Date.UTC(year, i, 1) - start) / MS_PER_DAY);
-    return { month: i + 1, col: Math.floor((index + offset) / 7) };
+export function monthStrips(): MonthStrip[] {
+  return MONTH_LENGTHS.map((length, i) => {
+    const mm = String(i + 1).padStart(2, '0');
+    return {
+      month: i + 1,
+      days: Array.from({ length: 31 }, (_, d): StripDay =>
+        d < length ? { md: `${mm}-${String(d + 1).padStart(2, '0')}` } : null,
+      ),
+    };
   });
 }
